@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v3.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v3.0": {
+      "Microsoft.WindowsAPICodePack.Shell/1.1.4": {
+        "dependencies": {
+          "Microsoft-WindowsAPICodePack-Core": "1.1.4"
+        },
+        "runtime": {
+          "Microsoft.WindowsAPICodePack.Shell.dll": {}
+        }
+      },
+      "Microsoft-WindowsAPICodePack-Core/1.1.4": {
+        "runtime": {
+          "Microsoft.WindowsAPICodePack.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.WindowsAPICodePack.Shell/1.1.4": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft-WindowsAPICodePack-Core/1.1.4": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

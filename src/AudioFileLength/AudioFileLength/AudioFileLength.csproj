@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <Copyright>wenhx</Copyright>
+    <AssemblyName>afl</AssemblyName>
+    <PackageProjectUrl>https://github.com/wenhx/MyToolkit</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/wenhx/MyToolkit</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.WindowsAPICodePack.Shell">
+      <HintPath>..\Libraries\Microsoft.WindowsAPICodePack.Shell.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
