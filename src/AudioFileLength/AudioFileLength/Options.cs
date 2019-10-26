@@ -8,6 +8,8 @@
 
         public bool Verbose { get; set; }
 
-        internal string Error { get; set; }
+        public bool DisplayHelp { get; set; }
+
+        internal string Message { get; set; }
     }
 }

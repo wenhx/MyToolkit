@@ -13,9 +13,9 @@ namespace AudioLengthCounter
         static void Main(string[] args)
         {
             var options = CommandLineParser.Parse(args);
-            if (options.Error != null)
+            if (options.Message != null)
             {
-                Console.WriteLine(options.Error);
+                Console.WriteLine(options.Message);
                 return;
             }
 
