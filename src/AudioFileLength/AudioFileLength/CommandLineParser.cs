@@ -12,8 +12,9 @@ namespace AudioLengthCounter
             if (args == null || args.Length == 0)
                 return rtn;
 
-            foreach (var arg in args)
+            for (int i = 0; i < args.Length; i++)
             {
+                var arg = args[i];
                 if (string.IsNullOrWhiteSpace(arg))
                     continue;
 
@@ -29,6 +30,16 @@ namespace AudioLengthCounter
                             break;
                         case "-h":
                             rtn.DisplayHelp = true;
+                            break;
+                        case "-n":
+                            try
+                            {
+                                rtn.FilesNumber = int.Parse(args[++i]);
+                            }
+                            catch
+                            {
+
+                            }
                             break;
                         default:
                             break;
@@ -61,9 +72,10 @@ namespace AudioLengthCounter
                 sb.AppendLine();
                 sb.AppendLine();
                 sb.AppendLine("Options:");
-                sb.AppendLine("-h   Display help.");
-                sb.AppendLine("-s   Include subfolders.");
-                sb.AppendLine("-v   Display verbose information.");
+                sb.AppendLine("-h           Display help.");
+                sb.AppendLine("-s           Include subfolders.");
+                sb.AppendLine("-v           Display verbose information.");
+                sb.AppendLine("-n number    Only count max number files..");
                 sb.AppendLine();
                 sb.AppendLine("path:");
                 sb.AppendLine("  The folder to count, if empty use current folder.");

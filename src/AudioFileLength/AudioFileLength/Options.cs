@@ -6,6 +6,8 @@
 
         public bool IncludeSubdirectories { get; set; }
 
+        public int FilesNumber { get; set; }
+
         public bool Verbose { get; set; }
 
         public bool DisplayHelp { get; set; }

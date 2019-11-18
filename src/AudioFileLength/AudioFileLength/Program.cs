@@ -9,6 +9,8 @@ namespace AudioLengthCounter
         static readonly string _TimeSpanFormat = "hh\\:mm\\:ss";
         static bool _Verbose = false;
         static int _SubfoldersNumber = 0;
+        static int _CountedFiles = 0;
+        static int _MaxFiles = 0;
 
         static void Main(string[] args)
         {
@@ -20,6 +22,7 @@ namespace AudioLengthCounter
             }
 
             _Verbose = options.Verbose;
+            _MaxFiles = options.FilesNumber > 0 ? options.FilesNumber : int.MaxValue;
 
             var duration = SumFilesDuration(options.Directory);
             if (options.IncludeSubdirectories)
@@ -45,6 +48,8 @@ namespace AudioLengthCounter
                 total += SumFilesDuration(folder);
                 total += SumFoldersDuration(folder);
                 _SubfoldersNumber++;
+                if (_CountedFiles >= _MaxFiles)
+                    break;
             }
             return total;
         }
@@ -66,6 +71,9 @@ namespace AudioLengthCounter
                         Console.WriteLine("[{0}]: {1}.", file, duration.ToString(_TimeSpanFormat));
                     }
                     totalDuration += duration;
+                    _CountedFiles++;
+                    if (_CountedFiles >= _MaxFiles)
+                        break;
                 }
             }
             if (_Verbose)
