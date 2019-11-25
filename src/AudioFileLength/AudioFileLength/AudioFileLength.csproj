@@ -8,7 +8,7 @@
     <AssemblyName>afl</AssemblyName>
     <PackageProjectUrl>https://github.com/wenhx/MyToolkit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/wenhx/MyToolkit</RepositoryUrl>
-    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <AssemblyVersion>1.2.0</AssemblyVersion>
   </PropertyGroup>
 
   <ItemGroup>

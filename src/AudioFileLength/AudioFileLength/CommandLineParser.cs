@@ -41,6 +41,16 @@ namespace AudioLengthCounter
 
                             }
                             break;
+                        case "-k":
+                            try
+                            {
+                                rtn.SkipFilesNumber = int.Parse(args[++i]);
+                            }
+                            catch
+                            {
+
+                            }
+                            break;
                         default:
                             break;
                     }
@@ -75,7 +85,8 @@ namespace AudioLengthCounter
                 sb.AppendLine("-h           Display help.");
                 sb.AppendLine("-s           Include subfolders.");
                 sb.AppendLine("-v           Display verbose information.");
-                sb.AppendLine("-n number    Only count max number files..");
+                sb.AppendLine("-n number    The max number files to count.");
+                sb.AppendLine("-k number    Skip number files before counting.");
                 sb.AppendLine();
                 sb.AppendLine("path:");
                 sb.AppendLine("  The folder to count, if empty use current folder.");

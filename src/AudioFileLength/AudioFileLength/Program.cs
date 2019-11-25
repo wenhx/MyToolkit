@@ -10,7 +10,9 @@ namespace AudioLengthCounter
         static bool _Verbose = false;
         static int _SubfoldersNumber = 0;
         static int _CountedFiles = 0;
-        static int _MaxFiles = 0;
+        static int _MaxFilesNumber = 0;
+        static int _SkippedFiles = 0;
+        static int _SkipFilesNumber = 0;
 
         static void Main(string[] args)
         {
@@ -22,7 +24,8 @@ namespace AudioLengthCounter
             }
 
             _Verbose = options.Verbose;
-            _MaxFiles = options.FilesNumber > 0 ? options.FilesNumber : int.MaxValue;
+            _MaxFilesNumber = options.FilesNumber > 0 ? options.FilesNumber : int.MaxValue;
+            _SkipFilesNumber = options.SkipFilesNumber > 0 ? options.SkipFilesNumber : 0;
 
             var duration = SumFilesDuration(options.Directory);
             if (options.IncludeSubdirectories)
@@ -48,7 +51,7 @@ namespace AudioLengthCounter
                 total += SumFilesDuration(folder);
                 total += SumFoldersDuration(folder);
                 _SubfoldersNumber++;
-                if (_CountedFiles >= _MaxFiles)
+                if (_CountedFiles >= _MaxFilesNumber)
                     break;
             }
             return total;
@@ -65,6 +68,10 @@ namespace AudioLengthCounter
                     out double nanoseconds);
                 if (nanoseconds > 0)
                 {
+                    _SkippedFiles++;
+                    if (_SkippedFiles <= _SkipFilesNumber)
+                        continue;
+
                     var duration = TimeSpan.FromMilliseconds(Convert100NanosecondsToMilliseconds(nanoseconds));
                     if (_Verbose)
                     {
@@ -72,7 +79,7 @@ namespace AudioLengthCounter
                     }
                     totalDuration += duration;
                     _CountedFiles++;
-                    if (_CountedFiles >= _MaxFiles)
+                    if (_CountedFiles >= _MaxFilesNumber)
                         break;
                 }
             }
