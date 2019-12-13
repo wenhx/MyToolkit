@@ -2,13 +2,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <PublishReadyToRun>true</PublishReadyToRun>
     <Copyright>wenhx</Copyright>
     <AssemblyName>afl</AssemblyName>
     <PackageProjectUrl>https://github.com/wenhx/MyToolkit</PackageProjectUrl>
     <RepositoryUrl>https://github.com/wenhx/MyToolkit</RepositoryUrl>
     <AssemblyVersion>1.2.0</AssemblyVersion>
+    <FileVersion>1.0.0.1</FileVersion>
+    <Version>1.2.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
