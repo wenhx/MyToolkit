@@ -1,0 +1,31 @@
+﻿<Window x:Class="DuplicateEverywhere.FilterWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DuplicateEverywhere"
+        mc:Ignorable="d"
+        Title="SearchedResultFilter" Height="360" Width="480" WindowStyle="ToolWindow">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="40"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="4*"/>
+        </Grid.ColumnDefinitions>
+        <Label x:Name="label" Content="Highlight Paths:" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+        <TextBox x:Name="UI_Textbox_HighlightPaths" TextWrapping="Wrap" Margin="4,4,4,4" Grid.Column="1"/>
+        <Label x:Name="label1" Content="Ignore Paths:" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+        <TextBox x:Name="UI_Textbox_IgnorePaths" TextWrapping="Wrap" Grid.Row="1" Grid.Column="1" Margin="4,4,4,4" AcceptsReturn="True"/>
+        <Button x:Name="UI_Button_OK" Content="OK" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right" Margin="0,6,70,6" Width="50" Click="UI_Button_OK_Click"/>
+        <Button x:Name="UI_Button_Cancel" Content="Cancel" Grid.Row="3" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Stretch" Margin="0,6,12,6" Width="50" Click="UI_Button_Cancel_Click"/>
+        <CheckBox x:Name="UI_CheckBox_OnlyShow1ResultRows" Content="Only show 1 result rows." Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+        <CheckBox x:Name="UI_CheckBox_NotShowResultsContainHighlighPaths" Content="Do not show those results at least contain one of highlight paths." Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,18,0,0"/>
+        <CheckBox x:Name="UI_CheckBox_SameSize" Content="Compare file size." Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,35,0,0"/>
+
+    </Grid>
+</Window>
