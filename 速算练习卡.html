@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>速算题目生成与幻灯片速算卡</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 基础字体与平滑渲染 */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
+    }
+
+    .math-font {
+      font-family: "SF Pro Rounded", "Comic Sans MS", "Trebuchet MS", "Microsoft YaHei", monospace;
+      letter-spacing: 0.04em;
+    }
+
+    /* 留白横线与比大小圆圈样式 */
+    .blank-box {
+      display: inline-block;
+      text-align: center;
+      border-bottom: 3px solid #334155;
+      min-width: 1.6em;
+      padding: 0 0.15em;
+      margin: 0 0.15em;
+      font-weight: 700;
+      color: #2563eb;
+      line-height: 1.1;
+      vertical-align: baseline;
+      transition: all 0.2s ease;
+    }
+
+    .circle-cmp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.4em;
+      height: 1.4em;
+      border: 2.5px solid #475569;
+      border-radius: 9999px;
+      margin: 0 0.2em;
+      font-weight: 800;
+      color: #2563eb;
+      vertical-align: middle;
+      font-size: 0.85em;
+      transition: all 0.2s ease;
+    }
+
+    /* 幻灯片答案显示动效 */
+    .slide-card .answer-val {
+      opacity: 0;
+      transform: scale(0.7) translateY(4px);
+      display: inline-block;
+      transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slide-card.revealed .answer-val {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+
+    /* 打印试卷专用小尺寸组件 */
+    .print-sheet .blank-box {
+      border-bottom-width: 1.5px;
+      min-width: 44px;
+      margin: 0 2px;
+      font-size: 1em;
+      line-height: 1.2;
+    }
+
+    .print-sheet .circle-cmp {
+      width: 28px;
+      height: 22px;
+      border-width: 1.2px;
+      font-size: 0.85em;
+      margin: 0 3px;
+    }
+
+    .print-sheet .answer-val {
+      display: none;
+    }
+    .print-sheet.show-answer .answer-val {
+      display: inline !important;
+      opacity: 1 !important;
+      color: #000000 !important;
+      transform: none !important;
+    }
+
+    /* 屏幕视图下隐藏 A4 打印卷 */
+    #printWrapper {
+      display: none;
+    }
+
+    /* =========================================================================
+       A4 页面打印配置：打印时完全隐藏幻灯片，纯净输出紧凑试卷
+       ========================================================================= */
+    @page {
+      size: A4 portrait;
+      margin: 12mm 15mm 10mm 15mm;
+    }
+
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: #000000 !important;
+      }
+      .slide-interface {
+        display: none !important;
+      }
+      #printWrapper {
+        display: block !important;
+      }
+      .a4-page {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 275mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always;
+        break-after: page;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .a4-page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+      .print-sheet .blank-box {
+        border-bottom-color: #000000 !important;
+      }
+      .print-sheet .circle-cmp {
+        border-color: #000000 !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased overflow-hidden select-none">
+
+  <!-- =========================================================================
+       幻灯片展示界面 (全面适配手机横版、竖版、平板及大屏)
+       ========================================================================= -->
+  <div class="slide-interface fixed inset-0 flex flex-col justify-between p-3 sm:p-5 max-w-4xl mx-auto h-[100dvh]">
+    
+    <!-- 1. 顶部栏：题号、进度条及轻量设置按钮 -->
+    <header class="flex flex-col gap-2 shrink-0">
+      <div class="flex items-center justify-between">
+        <!-- 题号状态 -->
+        <div class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+            #
+          </span>
+          <span class="text-xl sm:text-2xl font-bold tracking-tight text-slate-800 font-sans">
+            第 <span id="currentNum" class="text-blue-600">1</span> 题
+          </span>
+        </div>
+
+        <!-- 顶部操作菜单按钮 -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <button id="btnOpenSettings" class="px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-xs transition flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <span class="hidden sm:inline">题库配置</span>
+          </button>
+
+          <button id="btnPrintWorksheet" class="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            <span>打印/导出PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 顶部长条进度指示 -->
+      <div class="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
+        <div id="progressBar" class="bg-blue-600 h-1.5 transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </header>
+
+    <!-- 2. 核心幻灯片卡片区域（单题居中超大字体显示、自适应缩放） -->
+    <main class="flex-1 flex items-center justify-center my-3 sm:my-4 relative min-h-0">
+      <div id="slideCard" class="slide-card w-full h-full max-h-[580px] bg-white rounded-3xl shadow-lg border border-slate-200/80 p-5 sm:p-10 flex flex-col items-center justify-center cursor-pointer transition-transform duration-200 active:scale-[0.99] relative overflow-hidden select-none">
+        
+        <!-- 题目序号角标 (隐约背景) -->
+        <div id="watermarkNum" class="absolute -top-6 -right-3 text-[5rem] sm:text-[7rem] font-black text-slate-100/60 pointer-events-none select-none font-mono">
+          01
+        </div>
+
+        <!-- 算式核心展示（基于 clamp 动态伸缩，手机横竖屏完美适配且不换行断裂） -->
+        <div id="formulaDisplay" class="math-font text-center font-bold text-slate-900 leading-normal tracking-wide px-2 z-10 flex flex-wrap items-center justify-center" style="font-size: clamp(2rem, 6.2vw, 4.4rem);">
+          <!-- 动态注入当前题目算式 -->
+        </div>
+
+        <!-- 触控交互辅助提示 -->
+        <div id="actionHint" class="absolute bottom-4 sm:bottom-6 text-xs sm:text-sm text-slate-400 font-sans tracking-wide flex items-center gap-1.5 transition-opacity duration-300">
+          <svg class="w-4 h-4 text-blue-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+          <span id="hintText">点击或上下滑动显示答案</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- 3. 底部栏：总题数显示、答案切换及前进后退按钮 -->
+    <footer class="flex flex-col gap-2 shrink-0">
+      <div class="flex items-center justify-between gap-3">
+        
+        <!-- 上一题按钮 -->
+        <button id="btnPrev" class="flex-1 sm:flex-initial sm:px-6 py-2.5 rounded-2xl bg-white hover:bg-slate-50 active:bg-slate-100 border border-slate-200 shadow-xs text-sm font-semibold text-slate-700 flex items-center justify-center gap-1.5 transition disabled:opacity-30 disabled:pointer-events-none">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          <span>上一题</span>
+        </button>
+
+        <!-- 中部：共几题展示与快速开关答案按键 -->
+        <div class="flex items-center gap-2">
+          <button id="btnToggleAnswer" class="px-4 sm:px-6 py-2.5 rounded-2xl bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700 border border-blue-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-xs transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+            <span id="btnToggleAnswerText">显示答案</span>
+          </button>
+        </div>
+
+        <!-- 下一题按钮 -->
+        <button id="btnNext" class="flex-1 sm:flex-initial sm:px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-sm text-sm font-semibold text-white flex items-center justify-center gap-1.5 transition disabled:opacity-30 disabled:pointer-events-none">
+          <span>下一题</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+
+      </div>
+
+      <!-- 底部辅助文字：明确指引“共几题”及手势说明 -->
+      <div class="flex items-center justify-between text-xs text-slate-400 font-sans px-1">
+        <span>支持键盘 ← → 翻题，↑ ↓ / 空格看答案</span>
+        <span class="font-bold text-slate-600 tracking-wide">共 <span id="totalQuestionsCount">60</span> 题</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- =========================================================================
+       轻量设置抽屉 / 弹窗 (用于调整题目数量、打印选项及重新生成)
+       ========================================================================= -->
+  <div id="settingsModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 flex flex-col gap-5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-base text-slate-900">题库与打印参数</h3>
+        <button id="btnCloseSettings" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-4 text-sm">
+        <!-- 题目数量选择 (10~100整十，默认60) -->
+        <div class="flex items-center justify-between">
+          <label for="cfgQuestionCount" class="font-medium text-slate-700">题目总数 (10~100):</label>
+          <select id="cfgQuestionCount" class="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 font-semibold text-slate-800">
+            <option value="10">10 题</option>
+            <option value="20">20 题</option>
+            <option value="30">30 题</option>
+            <option value="40">40 题</option>
+            <option value="50">50 题</option>
+            <option value="60" selected>60 题 (标准)</option>
+            <option value="70">70 题</option>
+            <option value="80">80 题</option>
+            <option value="90">90 题</option>
+            <option value="100">100 题</option>
+          </select>
+        </div>
+
+        <!-- 打印是否包含答案 -->
+        <label class="flex items-center justify-between p-2.5 bg-blue-50/60 rounded-xl cursor-pointer">
+          <span class="text-sm font-semibold text-blue-900">打印卷输出参考答案</span>
+          <input type="checkbox" id="cfgPrintAnswers" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+        </label>
+      </div>
+
+      <div class="flex flex-col gap-2 pt-2 border-t border-slate-100">
+        <button id="btnRegenerateNow" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-xs transition flex items-center justify-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          重新生成题目
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       打印 / 导出 PDF 视图容器 (标准 A4 分页，屏幕平时隐藏，打印时自动渲染输出)
+       ========================================================================= -->
+  <div id="printWrapper" class="print-sheet">
+    <div id="printPagesContainer">
+      <!-- 动态排版生成的 A4 页面列表 -->
+    </div>
+  </div>
+
+  <script>
+    /* =====================================================================
+       一、核心题目生成算法模块（与规范完全对齐）
+       ===================================================================== */
+    const MathGenerator = {
+      rand(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      },
+      choice(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      },
+
+      /* 1. 万以内加减法 */
+      genTwoDigitsAddSub() {
+        const type = this.choice(['no_carry_add', 'carry_add', 'no_borrow_sub', 'borrow_sub']);
+        if (type === 'no_carry_add') {
+          const u1 = this.rand(1, 8), u2 = this.rand(1, 9 - u1);
+          const t1 = this.rand(1, 8), t2 = this.rand(1, 9 - t1);
+          const a = t1 * 10 + u1, b = t2 * 10 + u2;
+          return `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`;
+        } else if (type === 'carry_add') {
+          const u1 = this.rand(2, 9), u2 = this.rand(10 - u1, 9);
+          const a = this.rand(1, 8) * 10 + u1, b = this.rand(1, 8) * 10 + u2;
+          return `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`;
+        } else if (type === 'no_borrow_sub') {
+          const u1 = this.rand(2, 9), u2 = this.rand(0, u1);
+          const t1 = this.rand(2, 9), t2 = this.rand(1, t1);
+          const a = t1 * 10 + u1, b = t2 * 10 + u2;
+          return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+        } else {
+          if (Math.random() < 0.25) {
+            const b = this.rand(11, 89);
+            return `100 - ${b} = <span class="blank-box"><span class="answer-val">${100 - b}</span></span>`;
+          }
+          const u1 = this.rand(0, 7), u2 = this.rand(u1 + 1, 9);
+          const a = this.rand(3, 9) * 10 + u1, b = this.rand(1, Math.floor(a / 10) - 1) * 10 + u2;
+          return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+        }
+      },
+
+      genRoundAddSub() {
+        const subtype = this.choice(['hundreds', 'thousands', 'mixed_tens']);
+        if (subtype === 'hundreds') {
+          if (Math.random() < 0.5) {
+            const a = this.rand(1, 6) * 100, b = this.rand(1, 9 - a / 100) * 100;
+            return `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`;
+          } else {
+            const a = this.rand(4, 9) * 100, b = this.rand(12, Math.floor(a / 10) - 2) * 10;
+            return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+          }
+        } else if (subtype === 'thousands') {
+          if (Math.random() < 0.5) {
+            const a = this.rand(11, 25) * 100, b = this.rand(4, Math.floor(a / 100) - 1) * 100;
+            return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+          } else {
+            const a = this.rand(4, 9) * 100, b = this.rand(5, 9) * 100;
+            return `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`;
+          }
+        } else {
+          const a = this.rand(15, 65) * 10, b = this.rand(15, 30) * 10;
+          return Math.random() < 0.5
+            ? `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`
+            : `${a + b} - ${b} = <span class="blank-box"><span class="answer-val">${a}</span></span>`;
+        }
+      },
+
+      genThreeDigitsAddSub() {
+        const modes = ['add_0_carry', 'sub_0_borrow', 'add_1_carry', 'sub_1_borrow', 'add_2_carry', 'sub_across_zero', 'sub_round_hundreds'];
+        const m = this.choice(modes);
+
+        if (m === 'add_0_carry') {
+          const a = this.rand(1, 6) * 100 + this.rand(1, 4) * 10 + this.rand(1, 4);
+          const b = this.rand(1, 3) * 100 + this.rand(1, 5) * 10 + this.rand(1, 5);
+          return `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`;
+        } else if (m === 'sub_0_borrow') {
+          const a = this.rand(4, 9) * 100 + this.rand(5, 9) * 10 + this.rand(5, 9);
+          const b = this.rand(1, 3) * 100 + this.rand(1, 4) * 10 + this.rand(1, 4);
+          return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+        } else if (m === 'add_1_carry') {
+          const u1 = this.rand(4, 9), u2 = this.rand(10 - u1, 9);
+          const a = this.rand(1, 6) * 100 + this.rand(1, 4) * 10 + u1;
+          const b = this.rand(1, 3) * 100 + this.rand(1, 4) * 10 + u2;
+          return `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`;
+        } else if (m === 'sub_1_borrow') {
+          const u1 = this.rand(0, 5), u2 = this.rand(u1 + 1, 9);
+          const a = this.rand(3, 8) * 100 + this.rand(3, 8) * 10 + u1;
+          const b = this.rand(1, 2) * 100 + this.rand(1, 2) * 10 + u2;
+          return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+        } else if (m === 'add_2_carry') {
+          const a = this.rand(2, 5) * 100 + this.rand(5, 8) * 10 + this.rand(5, 9);
+          const b = this.rand(1, 3) * 100 + this.rand(5, 8) * 10 + this.rand(5, 9);
+          return `${a} + ${b} = <span class="blank-box"><span class="answer-val">${a + b}</span></span>`;
+        } else if (m === 'sub_across_zero') {
+          const a = this.rand(3, 7) * 100 + this.rand(1, 6);
+          const b = this.rand(1, 2) * 100 + this.rand(3, 8) * 10 + this.rand(7, 9);
+          return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+        } else {
+          const a = this.rand(3, 8) * 100;
+          const b = (Math.random() < 0.5) ? this.rand(25, 85) : this.rand(1, 2) * 100 + this.rand(25, 85);
+          return `${a} - ${b} = <span class="blank-box"><span class="answer-val">${a - b}</span></span>`;
+        }
+      },
+
+      /* 2. 多位数乘一位数及除法 */
+      genRoundMultiplication() {
+        const t = this.choice(['30x5', '200x4', '6x50', '2100x4']);
+        if (t === '30x5') {
+          const a = this.rand(2, 9) * 10, b = this.rand(2, 9);
+          return `${a} × ${b} = <span class="blank-box"><span class="answer-val">${a * b}</span></span>`;
+        } else if (t === '200x4') {
+          const a = this.rand(2, 8) * 100, b = this.rand(2, 6);
+          return `${a} × ${b} = <span class="blank-box"><span class="answer-val">${a * b}</span></span>`;
+        } else if (t === '6x50') {
+          const a = this.rand(2, 9), b = this.rand(2, 9) * 10;
+          return `${a} × ${b} = <span class="blank-box"><span class="answer-val">${a * b}</span></span>`;
+        } else {
+          const a = this.choice([1100, 1200, 2100, 3100]), b = this.rand(2, 4);
+          return `${a} × ${b} = <span class="blank-box"><span class="answer-val">${a * b}</span></span>`;
+        }
+      },
+
+      genTwoDigitsMult() {
+        if (Math.random() < 0.45) {
+          const b = this.rand(2, 4);
+          const a = this.rand(1, Math.floor(9 / b)) * 10 + this.rand(1, Math.floor(9 / b));
+          return `${a} × ${b} = <span class="blank-box"><span class="answer-val">${a * b}</span></span>`;
+        } else {
+          const a = this.choice([14, 15, 16, 18, 24, 25, 35, 61]);
+          const b = this.rand(3, 7);
+          return `${a} × ${b} = <span class="blank-box"><span class="answer-val">${a * b}</span></span>`;
+        }
+      },
+
+      genZeroMult() {
+        if (Math.random() < 0.4) {
+          const val = this.rand(12, 880);
+          return Math.random() < 0.5
+            ? `0 × ${val} = <span class="blank-box"><span class="answer-val">0</span></span>`
+            : `${val} × 0 = <span class="blank-box"><span class="answer-val">0</span></span>`;
+        } else {
+          const a = this.rand(2, 6) * 100 + this.rand(1, 8);
+          const b = this.rand(2, 4);
+          return `${a} × ${b} = <span class="blank-box"><span class="answer-val">${a * b}</span></span>`;
+        }
+      },
+
+      genBasicDivBlank() {
+        const b = this.rand(2, 9), q = this.rand(2, 9);
+        const a = b * q;
+        const pos = this.choice(['blank_dividend', 'blank_divisor', 'blank_quotient']);
+        if (pos === 'blank_dividend') {
+          return `<span class="blank-box"><span class="answer-val">${a}</span></span> ÷ ${b} = ${q}`;
+        } else if (pos === 'blank_divisor') {
+          return `${a} ÷ <span class="blank-box"><span class="answer-val">${b}</span></span> = ${q}`;
+        } else {
+          return `${a} ÷ ${b} = <span class="blank-box"><span class="answer-val">${q}</span></span>`;
+        }
+      },
+
+      genRemainderDivBlank() {
+        const b = this.rand(3, 9), q = this.rand(2, 9);
+        const r = this.rand(1, b - 1);
+        const a = b * q + r;
+        const style = this.choice(['fill_both', 'fill_dividend']);
+        if (style === 'fill_both') {
+          return `${a} ÷ ${b} = <span class="blank-box"><span class="answer-val">${q}</span></span> …… <span class="blank-box"><span class="answer-val">${r}</span></span>`;
+        } else {
+          return `<span class="blank-box"><span class="answer-val">${a}</span></span> ÷ ${b} = ${q} …… ${r}`;
+        }
+      },
+
+      /* 3. 简单两步口算混合运算 */
+      genMixedOps() {
+        const type = this.choice(['mult_add', 'div_add', 'same_level', 'parentheses']);
+        if (type === 'mult_add') {
+          const b = this.rand(2, 8), c = this.rand(2, 8);
+          const a = this.rand(2, 30);
+          return Math.random() < 0.5
+            ? `${a} + ${b} × ${c} = <span class="blank-box"><span class="answer-val">${a + b * c}</span></span>`
+            : `${b} × ${c} - ${Math.min(a, b * c - 1)} = <span class="blank-box"><span class="answer-val">${b * c - Math.min(a, b * c - 1)}</span></span>`;
+        } else if (type === 'div_add') {
+          const divisor = this.rand(2, 8), quotient = this.rand(2, 8);
+          const dividend = divisor * quotient;
+          const a = this.rand(5, 40);
+          return `${a} + ${dividend} ÷ ${divisor} = <span class="blank-box"><span class="answer-val">${a + quotient}</span></span>`;
+        } else if (type === 'same_level') {
+          const a = this.rand(30, 80), b = this.rand(10, 20), c = this.rand(5, 15);
+          return `${a} - ${b} + ${c} = <span class="blank-box"><span class="answer-val">${a - b + c}</span></span>`;
+        } else {
+          const div = this.rand(2, 8), q = this.rand(2, 8);
+          const dividend = div * q;
+          const p1 = this.rand(div + 1, div + 6), p2 = p1 - div;
+          return `${dividend} ÷ (${p1} - ${p2}) = <span class="blank-box"><span class="answer-val">${q}</span></span>`;
+        }
+      },
+
+      /* 4. 比大小 */
+      genComparison() {
+        if (Math.random() < 0.5) {
+          const pairs = [[1024, 1042], [3080, 3800], [2901, 2091], [5600, 5060], [4321, 4231], [7007, 7070], [8990, 8909]];
+          const [n1, n2] = this.choice(pairs);
+          const flip = Math.random() < 0.5;
+          const a = flip ? n2 : n1, b = flip ? n1 : n2;
+          const symbol = a > b ? '>' : (a < b ? '<' : '=');
+          return `${a} <span class="circle-cmp"><span class="answer-val">${symbol}</span></span> ${b}`;
+        } else {
+          const b = this.rand(3, 9), q = this.rand(3, 9);
+          const a = b * q;
+          const target = this.choice([q - 1, q, q + 1]);
+          const symbol = q > target ? '>' : (q < target ? '<' : '=');
+          return `${a} ÷ ${b} <span class="circle-cmp"><span class="answer-val">${symbol}</span></span> ${target}`;
+        }
+      }
+    };
+
+    /* =====================================================================
+       二、题库管理与生成
+       ===================================================================== */
+    let questionList = [];
+    let currentIndex = 0;
+    let isRevealed = false;
+
+    function generateAllQuestions(total = 60) {
+      let c4 = Math.max(1, Math.round(total * (5 / 60)));
+      let c3 = Math.max(1, Math.round(total * (10 / 60)));
+      let c2 = Math.max(1, Math.round(total * (15 / 60)));
+      let c1 = total - (c2 + c3 + c4);
+      if (c1 < 1) c1 = 1;
+
+      const list = [];
+      for (let i = 0; i < c1; i++) {
+        const r = Math.random();
+        if (r < 0.25) list.push(MathGenerator.genTwoDigitsAddSub());
+        else if (r < 0.45) list.push(MathGenerator.genRoundAddSub());
+        else list.push(MathGenerator.genThreeDigitsAddSub());
+      }
+      for (let i = 0; i < c2; i++) {
+        const r = Math.random();
+        if (r < 0.25) list.push(MathGenerator.genRoundMultiplication());
+        else if (r < 0.5) list.push(MathGenerator.genTwoDigitsMult());
+        else if (r < 0.65) list.push(MathGenerator.genZeroMult());
+        else if (r < 0.85) list.push(MathGenerator.genBasicDivBlank());
+        else list.push(MathGenerator.genRemainderDivBlank());
+      }
+      for (let i = 0; i < c3; i++) list.push(MathGenerator.genMixedOps());
+      for (let i = 0; i < c4; i++) list.push(MathGenerator.genComparison());
+
+      // 洗牌打乱
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+
+      return list;
+    }
+
+    /* =====================================================================
+       三、幻灯片核心控制器 (切换题目、显示答案、更新指示)
+       ===================================================================== */
+    const slideCard = document.getElementById('slideCard');
+    const formulaDisplay = document.getElementById('formulaDisplay');
+    const currentNum = document.getElementById('currentNum');
+    const watermarkNum = document.getElementById('watermarkNum');
+    const totalQuestionsCount = document.getElementById('totalQuestionsCount');
+    const progressBar = document.getElementById('progressBar');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnToggleAnswer = document.getElementById('btnToggleAnswer');
+    const btnToggleAnswerText = document.getElementById('btnToggleAnswerText');
+    const hintText = document.getElementById('hintText');
+
+    function updateSlide() {
+      if (questionList.length === 0) return;
+
+      const qHtml = questionList[currentIndex];
+      formulaDisplay.innerHTML = qHtml;
+
+      // 编号更新
+      const numStr = (currentIndex + 1).toString();
+      currentNum.textContent = numStr;
+      watermarkNum.textContent = numStr.padStart(2, '0');
+      totalQuestionsCount.textContent = questionList.length;
+
+      // 进度条
+      const percent = ((currentIndex + 1) / questionList.length) * 100;
+      progressBar.style.width = `${percent}%`;
+
+      // 换题默认收起答案
+      setAnswerReveal(false);
+
+      // 禁用/启用按钮状态
+      btnPrev.disabled = (currentIndex === 0);
+      btnNext.disabled = (currentIndex === questionList.length - 1);
+    }
+
+    function setAnswerReveal(reveal) {
+      isRevealed = reveal;
+      if (isRevealed) {
+        slideCard.classList.add('revealed');
+        btnToggleAnswerText.textContent = '隐藏答案';
+        hintText.textContent = '再次点击或滑动可隐藏答案';
+      } else {
+        slideCard.classList.remove('revealed');
+        btnToggleAnswerText.textContent = '显示答案';
+        hintText.textContent = '点击或上下滑动显示答案';
+      }
+    }
+
+    function toggleAnswer() {
+      setAnswerReveal(!isRevealed);
+    }
+
+    function goNext() {
+      if (currentIndex < questionList.length - 1) {
+        currentIndex++;
+        updateSlide();
+      }
+    }
+
+    function goPrev() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        updateSlide();
+      }
+    }
+
+    /* =====================================================================
+       四、滑动手势（Touch Swipes）与键盘事件监听
+       - 左右滑动：上一题 / 下一题
+       - 上下滑动或单击卡片：展开/隐藏答案
+       ===================================================================== */
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
+
+    slideCard.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    slideCard.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      touchEndY = e.changedTouches[0].screenY;
+      handleGesture();
+    }, { passive: true });
+
+    function handleGesture() {
+      const dx = touchEndX - touchStartX;
+      const dy = touchEndY - touchStartY;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+
+      // 门限判断
+      if (absDx < 20 && absDy < 20) {
+        // 近似原位点击，触发答案开关
+        toggleAnswer();
+        return;
+      }
+
+      if (absDx > absDy && absDx > 40) {
+        // 水平滑动：左右切换题目
+        if (dx < 0) {
+          goNext();
+        } else {
+          goPrev();
+        }
+      } else if (absDy > absDx && absDy > 35) {
+        // 垂直滑动：上下切换答案显示状态
+        toggleAnswer();
+      }
+    }
+
+    // 桌面点击卡片直接开关答案
+    slideCard.addEventListener('click', (e) => {
+      // 避免与 touch 重复触发（手势处理已涵盖）
+      if (window.matchMedia('(pointer: coarse)').matches) return;
+      toggleAnswer();
+    });
+
+    // 键盘支持
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById('settingsModal').classList.contains('hidden') === false) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        goNext();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        goPrev();
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        toggleAnswer();
+      }
+    });
+
+    btnPrev.addEventListener('click', goPrev);
+    btnNext.addEventListener('click', goNext);
+    btnToggleAnswer.addEventListener('click', toggleAnswer);
+
+    /* =====================================================================
+       五、A4 打印生成模块（标准整页 A4 排版、每页底附“第X页/共Y页”）
+       ===================================================================== */
+    function renderPrintSheet() {
+      const printPagesContainer = document.getElementById('printPagesContainer');
+      printPagesContainer.innerHTML = '';
+
+      const printWrapper = document.getElementById('printWrapper');
+      const shouldIncludeAnswers = document.getElementById('cfgPrintAnswers').checked;
+      if (shouldIncludeAnswers) {
+        printWrapper.classList.add('show-answer');
+      } else {
+        printWrapper.classList.remove('show-answer');
+      }
+
+      // 每页排版 60 道题为基准（可自适应分配多页）
+      const perPageCapacity = 60;
+      const totalPages = Math.ceil(questionList.length / perPageCapacity);
+
+      for (let p = 0; p < totalPages; p++) {
+        const pageQuestions = questionList.slice(p * perPageCapacity, (p + 1) * perPageCapacity);
+        const colCount = pageQuestions.length <= 20 ? 2 : (pageQuestions.length <= 60 ? 3 : 4);
+
+        const pageElem = document.createElement('div');
+        pageElem.className = 'a4-page';
+
+        const grid = document.createElement('div');
+        const gridCols = colCount === 2 ? 'grid-cols-2' : (colCount === 4 ? 'grid-cols-4' : 'grid-cols-3');
+        grid.className = `w-full flex-1 grid ${gridCols} gap-x-4 gap-y-4 items-center content-between math-font text-xs sm:text-sm`;
+
+        pageQuestions.forEach((formula, idx) => {
+          const globalNum = p * perPageCapacity + idx + 1;
+          const item = document.createElement('div');
+          item.className = 'flex items-center min-w-0 pr-1 truncate';
+          item.innerHTML = `
+            <span class="inline-block text-right pr-1 font-sans font-semibold text-slate-700 min-w-[28px] shrink-0">${globalNum}.</span>
+            <div class="truncate inline-block text-slate-900">${formula}</div>
+          `;
+          grid.appendChild(item);
+        });
+
+        pageElem.appendChild(grid);
+
+        // 底部居中打印页码
+        const footer = document.createElement('div');
+        footer.className = 'w-full text-center text-xs text-slate-400 font-sans tracking-widest pt-2 shrink-0';
+        footer.textContent = `第 ${p + 1} 页 / 共 ${totalPages} 页`;
+        pageElem.appendChild(footer);
+
+        printPagesContainer.appendChild(pageElem);
+      }
+    }
+
+    document.getElementById('btnPrintWorksheet').addEventListener('click', () => {
+      renderPrintSheet();
+      window.print();
+    });
+
+    /* =====================================================================
+       六、配置弹窗交互
+       ===================================================================== */
+    const settingsModal = document.getElementById('settingsModal');
+    document.getElementById('btnOpenSettings').addEventListener('click', () => {
+      settingsModal.classList.remove('hidden');
+    });
+    document.getElementById('btnCloseSettings').addEventListener('click', () => {
+      settingsModal.classList.add('hidden');
+    });
+    document.getElementById('btnRegenerateNow').addEventListener('click', () => {
+      const count = parseInt(document.getElementById('cfgQuestionCount').value, 10);
+      questionList = generateAllQuestions(count);
+      currentIndex = 0;
+      updateSlide();
+      settingsModal.classList.add('hidden');
+    });
+
+    // 初始化运行
+    document.addEventListener('DOMContentLoaded', () => {
+      questionList = generateAllQuestions(60);
+      updateSlide();
+    });
+  </script>
+</body>
+</html>
