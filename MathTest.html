@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>速算比赛闯关系统</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Font & Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans SC"', 'sans-serif'],
+            math: ['"Fredoka"', '"JetBrains Mono"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom animations & input styling */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+    .card-shadow {
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.08), 0 8px 10px -6px rgba(59, 130, 246, 0.04);
+    }
+    .math-font {
+      font-family: 'Fredoka', 'JetBrains Mono', 'Noto Sans SC', sans-serif;
+      letter-spacing: 0.05em;
+    }
+    .pulse-subtle {
+      animation: pulse-soft 2s infinite ease-in-out;
+    }
+    @keyframes pulse-soft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50/40 to-slate-100 min-h-screen text-slate-800 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+
+  <!-- TOP BRAND NAV -->
+  <header class="w-full bg-white/80 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="goHome()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+          <i class="fa-solid fa-calculator text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-slate-800 text-lg tracking-tight">速算比赛闯关系统</h1>
+          <p class="text-[11px] text-slate-400 font-medium">小学数学专项口算能力评测</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="toggleHistoryModal()" class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs sm:text-sm font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200/70 transition shadow-xs cursor-pointer">
+          <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i>
+          <span>测评历史</span>
+        </button>
+        <div id="navRightBadge" class="hidden text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full font-semibold border border-blue-200/60">
+          <i class="fa-solid fa-trophy mr-1.5 text-amber-500"></i>答题中
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center">
+
+    <!-- ============================================== -->
+    <!-- VIEW 1: HOME SETUP SCREEN                      -->
+    <!-- ============================================== -->
+    <div id="homeView" class="w-full bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-slate-100 transition-all">
+      <div class="text-center max-w-xl mx-auto mb-8">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-600 mb-3 border border-indigo-100">
+          <i class="fa-solid fa-sparkles text-amber-500"></i> 全新算法题库引擎
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">小学生数学速算能力测评</h2>
+        <p class="text-slate-500 text-sm sm:text-base leading-relaxed">
+          全面覆盖万以内加减法、多位数乘一位数、表内除法、有余数除法、四则混合运算及趣味比大小。
+        </p>
+      </div>
+
+      <!-- Syllabus Breakdown Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div class="bg-blue-50/70 border border-blue-100 rounded-2xl p-3.5 text-center transition hover:border-blue-300">
+          <span class="text-xs font-bold text-blue-600 block mb-0.5">加减法体系</span>
+          <div class="text-xl font-extrabold text-slate-800 mb-0.5">50%</div>
+          <p class="text-[11px] text-slate-500">两位/三位/万以内退位</p>
+        </div>
+        <div class="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-3.5 text-center transition hover:border-emerald-300">
+          <span class="text-xs font-bold text-emerald-600 block mb-0.5">乘除与余数</span>
+          <div class="text-xl font-extrabold text-slate-800 mb-0.5">25%</div>
+          <p class="text-[11px] text-slate-500">多位乘/表内填空/余数</p>
+        </div>
+        <div class="bg-amber-50/70 border border-amber-100 rounded-2xl p-3.5 text-center transition hover:border-amber-300">
+          <span class="text-xs font-bold text-amber-600 block mb-0.5">两步混合运算</span>
+          <div class="text-xl font-extrabold text-slate-800 mb-0.5">16.7%</div>
+          <p class="text-[11px] text-slate-500">乘除加减/括号运算</p>
+        </div>
+        <div class="bg-purple-50/70 border border-purple-100 rounded-2xl p-3.5 text-center transition hover:border-purple-300">
+          <span class="text-xs font-bold text-purple-600 block mb-0.5">数感比大小</span>
+          <div class="text-xl font-extrabold text-slate-800 mb-0.5">8.3%</div>
+          <p class="text-[11px] text-slate-500">易错四位/口算比对</p>
+        </div>
+      </div>
+
+      <!-- Config Settings -->
+      <div class="bg-slate-50/80 rounded-2xl p-5 border border-slate-200/70 mb-8">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-list-ol text-blue-500"></i>
+            选择测试题目总数
+          </label>
+          <span id="selectedCountDisplay" class="text-lg font-black text-blue-600 bg-white px-3 py-0.5 rounded-lg border border-blue-200">
+            60 题
+          </span>
+        </div>
+
+        <!-- Range / Step Picker 10 to 100 -->
+        <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5 mb-2">
+          <!-- 10,20,...,100 buttons -->
+          <button type="button" onclick="selectCount(10)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="10">10</button>
+          <button type="button" onclick="selectCount(20)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="20">20</button>
+          <button type="button" onclick="selectCount(30)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="30">30</button>
+          <button type="button" onclick="selectCount(40)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="40">40</button>
+          <button type="button" onclick="selectCount(50)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="50">50</button>
+          <button type="button" onclick="selectCount(60)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-blue-600 text-white border-blue-600 shadow-sm" data-value="60">60</button>
+          <button type="button" onclick="selectCount(70)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="70">70</button>
+          <button type="button" onclick="selectCount(80)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="80">80</button>
+          <button type="button" onclick="selectCount(90)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="90">90</button>
+          <button type="button" onclick="selectCount(100)" class="count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400" data-value="100">100</button>
+        </div>
+        <p class="text-[12px] text-slate-400 mt-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info"></i> 系统将按各题型权重科学抽取相应题目，各模块均有涉及。
+        </p>
+      </div>
+
+      <!-- Submit / Start Button -->
+      <button onclick="startQuiz()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transform active:scale-[0.99] transition cursor-pointer pulse-subtle">
+        <span>开始生成题目并答题</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- VIEW 2: QUIZ CARD VIEW                         -->
+    <!-- ============================================== -->
+    <div id="quizView" class="w-full hidden flex-col">
+      <!-- Top Status Header -->
+      <div class="bg-white rounded-2xl p-4 mb-4 card-shadow border border-slate-100 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <span class="text-xs font-semibold text-slate-400 uppercase">进度</span>
+          <div class="flex items-baseline space-x-1">
+            <span id="currentIdxDisplay" class="text-2xl font-black text-blue-600 font-math">1</span>
+            <span class="text-slate-400 text-sm font-semibold">/</span>
+            <span id="totalIdxDisplay" class="text-sm font-bold text-slate-600">60</span>
+          </div>
+        </div>
+
+        <!-- Progress Bar Indicator -->
+        <div class="hidden sm:block flex-1 max-w-xs mx-6">
+          <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+            <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 2%;"></div>
+          </div>
+        </div>
+
+        <!-- Timer -->
+        <div class="flex items-center space-x-2 bg-indigo-50 border border-indigo-100/80 px-3.5 py-1.5 rounded-xl">
+          <i class="fa-solid fa-stopwatch text-indigo-600 animate-pulse"></i>
+          <span id="timerDisplay" class="text-slate-700 font-mono font-bold text-base tracking-wider">00:00</span>
+        </div>
+      </div>
+
+      <!-- Question Main Card -->
+      <div class="bg-white rounded-3xl p-6 sm:p-10 card-shadow border border-slate-100 min-h-[360px] flex flex-col justify-between relative overflow-hidden">
+        
+        <!-- Top Meta Tag & Jump Drawer Toggle -->
+        <div class="flex items-center justify-between mb-4">
+          <span id="questionTag" class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            万以内加减法
+          </span>
+          <button onclick="toggleCardGrid()" class="text-sm sm:text-base font-extrabold text-blue-600 hover:text-blue-700 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50/70 hover:bg-blue-100/70 transition cursor-pointer">
+            <i class="fa-solid fa-grip text-base"></i> 题目速览
+          </button>
+        </div>
+
+        <!-- Question Body Center (Input kept in the same line with stem) -->
+        <div class="my-auto py-6 text-center">
+          <div id="questionStem" class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-800 math-font flex items-center justify-center flex-wrap gap-3 sm:gap-4">
+            <!-- Dynamic math formula and inline input rendered together here -->
+          </div>
+
+          <!-- Bottom interactive controls container (Used for comparison options) -->
+          <div id="inputSection" class="mt-4 flex justify-center items-center">
+            <!-- Option buttons rendered here if needed -->
+          </div>
+        </div>
+
+        <!-- Navigation Buttons at Bottom -->
+        <div class="pt-6 border-t border-slate-100 flex items-center justify-between gap-3">
+          <button id="prevBtn" onclick="prevQuestion()" class="px-5 py-3 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-sm flex items-center gap-2 transition disabled:opacity-30 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-chevron-left"></i> 上一题
+          </button>
+
+          <!-- Shortcuts Hint -->
+          <div class="hidden sm:flex text-xs text-slate-400 items-center gap-1 font-medium">
+            <kbd class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] text-slate-500 font-mono">Enter ↵</kbd> 下一题
+          </div>
+
+          <button id="nextBtn" onclick="nextQuestion()" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center gap-2 shadow-md shadow-blue-500/20 transition">
+            <span>下一题</span> <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Question Jump Drawer Modal (Expandable) -->
+    <div id="jumpDrawer" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl p-6 max-h-[80vh] flex flex-col shadow-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <h3 class="font-bold text-slate-800 text-base">答题卡快速跳转</h3>
+          <button onclick="toggleCardGrid()" class="text-slate-400 hover:text-slate-600 text-xl p-1"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="jumpGrid" class="grid grid-cols-6 sm:grid-cols-8 gap-2 py-4 overflow-y-auto flex-1">
+          <!-- Buttons 1..N with colors according to answered status -->
+        </div>
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span> 已做</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span> 未做</span>
+          </div>
+          <button onclick="toggleCardGrid()" class="px-4 py-1.5 bg-slate-100 font-bold text-slate-600 rounded-lg">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSESSMENT HISTORY MODAL -->
+  <div id="historyModal" class="hidden fixed inset-0 bg-slate-900/45 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-2xl rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col max-h-[85vh] border border-slate-100 animate-in fade-in duration-200">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-800 text-lg">速算测评历史档案</h3>
+            <p class="text-xs text-slate-400">本地存储，关闭浏览器后依然保留</p>
+          </div>
+        </div>
+        <button onclick="toggleHistoryModal()" class="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- History List Content -->
+      <div id="historyListContainer" class="flex-1 overflow-y-auto py-4 space-y-3">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="clearQuizHistory()" class="text-xs font-semibold text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition">
+          <i class="fa-regular fa-trash-can mr-1"></i>清空历史记录
+        </button>
+        <button onclick="toggleHistoryModal()" class="px-5 py-2 bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 text-xs sm:text-sm rounded-xl transition">
+          关闭
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- VIEW 3: RESULTS / ANALYSIS VIEW                -->
+    <!-- ============================================== -->
+    <div id="resultView" class="w-full hidden flex-col">
+      <!-- Performance summary banner -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-slate-100 mb-6 text-center relative overflow-hidden">
+        <div id="badgeBanner" class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold bg-amber-50 text-amber-700 border border-amber-200 mb-4">
+          <i class="fa-solid fa-crown text-amber-500"></i> 速算小达人
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-black text-slate-800 mb-2">本次测验成绩单</h2>
+        
+        <!-- Big Score Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+          <div class="p-4 rounded-2xl bg-blue-50/60 border border-blue-100">
+            <div class="text-xs text-blue-600 font-bold mb-1">答对题数 / 总题数</div>
+            <div class="text-2xl sm:text-3xl font-black text-slate-800 font-math">
+              <span id="correctScore" class="text-blue-600">58</span> / <span id="totalQuestions">60</span>
+            </div>
+          </div>
+          <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100">
+            <div class="text-xs text-emerald-600 font-bold mb-1">正确率</div>
+            <div id="accuracyRate" class="text-2xl sm:text-3xl font-black text-emerald-600 font-math">96.7%</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100">
+            <div class="text-xs text-indigo-600 font-bold mb-1">答题总用时</div>
+            <div id="totalTimeUsed" class="text-2xl sm:text-3xl font-black text-indigo-600 font-mono">03:45</div>
+          </div>
+          <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-100">
+            <div class="text-xs text-amber-600 font-bold mb-1">平均每题</div>
+            <div id="avgTimePerQ" class="text-2xl sm:text-3xl font-black text-amber-600 font-mono">3.7s</div>
+          </div>
+        </div>
+
+        <!-- Action replay buttons -->
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <button onclick="restartSameSet()" class="px-6 py-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-sm flex items-center gap-2 transition">
+            <i class="fa-solid fa-rotate-left"></i> 重做本套试卷
+          </button>
+          <button onclick="goHome()" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center gap-2 shadow-md shadow-blue-500/20 transition">
+            <i class="fa-solid fa-shuffle"></i> 换一套新题
+          </button>
+        </div>
+      </div>
+
+      <!-- Question Review Panel -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-slate-100">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+          <div>
+            <h3 class="font-extrabold text-slate-800 text-lg">题目复盘与答案对比</h3>
+            <p class="text-slate-400 text-xs">点击错误题目可快速反思解题思路</p>
+          </div>
+
+          <!-- Filter toggle buttons -->
+          <div class="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-bold text-slate-600">
+            <button id="filterAllBtn" onclick="renderReview('all')" class="px-3.5 py-1.5 rounded-lg bg-white shadow-xs text-blue-600">全部题目 (<span id="allCountBadge">60</span>)</button>
+            <button id="filterWrongBtn" onclick="renderReview('wrong')" class="px-3.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800">只看错题 (<span id="wrongCountBadge">2</span>)</button>
+          </div>
+        </div>
+
+        <!-- List container -->
+        <div id="reviewList" class="mt-6 space-y-3">
+          <!-- Dynamically populated review items -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="text-center py-4 text-xs text-slate-400">
+    小学数学速算比赛闯关系统 &bull; 遵循小学新课标口算能力层级规范
+  </footer>
+
+  <!-- ============================================== -->
+  <!-- JAVASCRIPT LOGIC & CURRICULUM GENERATOR        -->
+  <!-- ============================================== -->
+  <script>
+    // App State
+    let selectedTotalCount = 60;
+    let questions = [];
+    let currentIndex = 0;
+    let timerInterval = null;
+    let elapsedSeconds = 0;
+    let currentFilter = 'all';
+
+    // Helper: Random integer [min, max]
+    function rand(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Helper: Random pick from array
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // ========================================================
+    // 1. ADVANCED MATHEMATICAL PROBLEM GENERATOR
+    // Strictly adheres to the curriculum specifications provided:
+    // Module 1: 万以内加减法
+    // Module 2: 多位数乘一位数 & 除法/余数
+    // Module 3: 简单两步混合运算
+    // Module 4: 比大小
+    // ========================================================
+
+    const Generator = {
+      // ----------------------------------------------------
+      // MODULE 1: 万以内加减法
+      // ----------------------------------------------------
+      // 1. 两位数加减两位数
+      genTwoDigits() {
+        const type = pick(['no_carry_add', 'no_borrow_sub', 'carry_add', 'borrow_sub']);
+        if (type === 'no_carry_add') {
+          // 不进位加法
+          const u1 = rand(1, 8), u2 = rand(1, 9 - u1);
+          const t1 = rand(1, 8), t2 = rand(1, 9 - t1);
+          const a = t1 * 10 + u1, b = t2 * 10 + u2;
+          return {
+            category: '万以内加减法 · 两位数不进位加',
+            type: 'standard',
+            display: `${a} + ${b} =`,
+            ans: a + b
+          };
+        } else if (type === 'no_borrow_sub') {
+          // 不退位减法
+          const u2 = rand(1, 8), u1 = rand(u2, 9);
+          const t2 = rand(1, 8), t1 = rand(t2, 9);
+          const a = t1 * 10 + u1, b = t2 * 10 + u2;
+          return {
+            category: '万以内加减法 · 两位数不退位减',
+            type: 'standard',
+            display: `${a} - ${b} =`,
+            ans: a - b
+          };
+        } else if (type === 'carry_add') {
+          // 进位加法
+          const u1 = rand(2, 9), u2 = rand(10 - u1, 9);
+          const a = rand(1, 7) * 10 + u1;
+          const b = rand(1, 8 - Math.floor(a/10)) * 10 + u2;
+          return {
+            category: '万以内加减法 · 两位数进位加法',
+            type: 'standard',
+            display: `${a} + ${b} =`,
+            ans: a + b
+          };
+        } else {
+          // 退位减法 (包括如 100 - 46, 72 - 18)
+          if (Math.random() < 0.25) {
+            const b = rand(15, 89);
+            return {
+              category: '万以内加减法 · 整百退位减法',
+              type: 'standard',
+              display: `100 - ${b} =`,
+              ans: 100 - b
+            };
+          }
+          const u1 = rand(0, 7), u2 = rand(u1 + 1, 9);
+          const a = rand(2, 9) * 10 + u1;
+          const b = rand(1, Math.floor(a/10) - 1) * 10 + u2;
+          return {
+            category: '万以内加减法 · 两位数退位减法',
+            type: 'standard',
+            display: `${a} - ${b} =`,
+            ans: a - b
+          };
+        }
+      },
+
+      // 2. 整十、整百、整千数加减 & 几百几十
+      genRoundNumbers() {
+        const subType = pick(['round_add', 'round_sub', 'hundred_ten_add', 'hundred_ten_sub']);
+        if (subType === 'round_add') {
+          // 300 + 500 = 或 440 + 27 =
+          if (Math.random() < 0.5) {
+            const a = rand(1, 8) * 100, b = rand(1, 9 - a/100) * 100;
+            return {
+              category: '整十/整百/整千数加减',
+              type: 'standard',
+              display: `${a} + ${b} =`,
+              ans: a + b
+            };
+          } else {
+            const a = rand(2, 8) * 100 + rand(1, 5) * 10;
+            const b = rand(11, 49);
+            return {
+              category: '整十/整百/整千数加减',
+              type: 'standard',
+              display: `${a} + ${b} =`,
+              ans: a + b
+            };
+          }
+        } else if (subType === 'round_sub') {
+          // 1200 - 800 = 或 700 - 260 =
+          if (Math.random() < 0.5) {
+            const a = rand(11, 18) * 100, b = rand(2, 9) * 100;
+            return {
+              category: '整十/整百/整千数加减',
+              type: 'standard',
+              display: `${a} - ${b} =`,
+              ans: a - b
+            };
+          } else {
+            const a = rand(4, 9) * 100;
+            const b = rand(1, Math.floor(a/100) - 1) * 100 + rand(1, 8) * 10;
+            return {
+              category: '整十/整百/整千数加减',
+              type: 'standard',
+              display: `${a} - ${b} =`,
+              ans: a - b
+            };
+          }
+        } else if (subType === 'hundred_ten_add') {
+          // 几百几十加几百几十 (如 450 + 190 =)
+          const a = rand(1, 5) * 100 + rand(1, 9) * 10;
+          const b = rand(1, 4) * 100 + rand(1, 9) * 10;
+          return {
+            category: '整十/整百/整千数 · 几百几十加法',
+            type: 'standard',
+            display: `${a} + ${b} =`,
+            ans: a + b
+          };
+        } else {
+          // 几百几十减几百几十 (如 630 - 280 =)
+          const b = rand(1, 4) * 100 + rand(2, 9) * 10;
+          const a = b + rand(1, 4) * 100 + rand(1, 5) * 10;
+          return {
+            category: '整十/整百/整千数 · 几百几十减法',
+            type: 'standard',
+            display: `${a} - ${b} =`,
+            ans: a - b
+          };
+        }
+      },
+
+      // 3. 三位数加减两位数 / 三位数（结果不超过1000）
+      genThreeDigits() {
+        const subtype = pick([
+          'add_no_carry', 'sub_no_borrow',
+          'add_single_carry_units', 'add_single_carry_tens',
+          'add_double_carry',
+          'sub_single_borrow_units', 'sub_single_borrow_tens',
+          'sub_double_borrow_normal', 'sub_double_borrow_middle_zero', 'sub_double_borrow_hundreds'
+        ]);
+
+        // a. 不进位加法 (0次进位)
+        if (subtype === 'add_no_carry') {
+          const isTwoDigit = Math.random() < 0.5;
+          const u2 = rand(1, 7), u1 = rand(1, 9 - u2);
+          const t2 = rand(1, 7), t1 = rand(1, 9 - t2);
+          if (isTwoDigit) {
+            const h1 = rand(1, 8);
+            const a = h1 * 100 + t1 * 10 + u1;
+            const b = t2 * 10 + u2;
+            return { category: '三位数加减 · 不进位加', type: 'standard', display: `${a} + ${b} =`, ans: a + b };
+          } else {
+            const h2 = rand(1, 4), h1 = rand(1, 8 - h2);
+            const a = h1 * 100 + t1 * 10 + u1;
+            const b = h2 * 100 + t2 * 10 + u2;
+            return { category: '三位数加减 · 不进位加', type: 'standard', display: `${a} + ${b} =`, ans: a + b };
+          }
+        }
+
+        // b. 不退位减法 (0次退位)
+        if (subtype === 'sub_no_borrow') {
+          const isTwoDigit = Math.random() < 0.5;
+          const u2 = rand(1, 7), u1 = rand(u2, 9);
+          const t2 = rand(1, 7), t1 = rand(t2, 9);
+          if (isTwoDigit) {
+            const a = rand(2, 8) * 100 + t1 * 10 + u1;
+            const b = t2 * 10 + u2;
+            return { category: '三位数加减 · 不退位减', type: 'standard', display: `${a} - ${b} =`, ans: a - b };
+          } else {
+            const h2 = rand(1, 4), h1 = rand(h2 + 1, 8);
+            const a = h1 * 100 + t1 * 10 + u1;
+            const b = h2 * 100 + t2 * 10 + u2;
+            return { category: '三位数加减 · 不退位减', type: 'standard', display: `${a} - ${b} =`, ans: a - b };
+          }
+        }
+
+        // c1. 一次进位加法：仅个位进位 (如 145 + 45 =, 236 + 154 =)
+        if (subtype === 'add_single_carry_units') {
+          const u1 = rand(2, 8), u2 = rand(10 - u1, 9); // 个位满十
+          // 十位加进位1不进位
+          const t1 = rand(1, 5), t2 = rand(1, 8 - t1);
+          const h1 = rand(1, 5), h2 = rand(0, 3);
+          const a = h1 * 100 + t1 * 10 + u1;
+          const b = h2 === 0 ? t2 * 10 + u2 : h2 * 100 + t2 * 10 + u2;
+          return { category: '三位数加减 · 个位进位加', type: 'standard', display: `${a} + ${b} =`, ans: a + b };
+        }
+
+        // c2. 一次进位加法：仅十位进位 (如 162 + 73 =)
+        if (subtype === 'add_single_carry_tens') {
+          const u1 = rand(1, 6), u2 = rand(1, 9 - u1); // 个位不进位
+          const t1 = rand(4, 9), t2 = rand(10 - t1, 9); // 十位满十
+          const h1 = rand(1, 5);
+          const a = h1 * 100 + t1 * 10 + u1;
+          const b = rand(0, 2) === 0 ? t2 * 10 + u2 : 100 + t2 * 10 + u2;
+          return { category: '三位数加减 · 十位进位加', type: 'standard', display: `${a} + ${b} =`, ans: a + b };
+        }
+
+        // d. 两次连续/间隔进位加法 (如 268 + 57 =, 356 + 278 =)
+        if (subtype === 'add_double_carry') {
+          const u1 = rand(4, 9), u2 = rand(10 - u1, 9);
+          const t1 = rand(4, 8), t2 = rand(10 - t1, 9);
+          const h1 = rand(1, 4), h2 = rand(0, 2);
+          const a = h1 * 100 + t1 * 10 + u1;
+          const b = h2 === 0 ? t2 * 10 + u2 : h2 * 100 + t2 * 10 + u2;
+          return { category: '三位数加减 · 连续双进位加', type: 'standard', display: `${a} + ${b} =`, ans: a + b };
+        }
+
+        // e1. 一次退位减法：仅个位退位 (如 252 - 38 =, 463 - 127 =)
+        if (subtype === 'sub_single_borrow_units') {
+          const u1 = rand(1, 6), u2 = rand(u1 + 1, 9); // 个位借位
+          const t2 = rand(1, 5), t1 = rand(t2 + 1, 8); // 十位够减(借1后依然>=t2)
+          const h1 = rand(2, 7), h2 = rand(0, h1 - 1);
+          const a = h1 * 100 + t1 * 10 + u1;
+          const b = h2 === 0 ? t2 * 10 + u2 : h2 * 100 + t2 * 10 + u2;
+          return { category: '三位数加减 · 个位退位减', type: 'standard', display: `${a} - ${b} =`, ans: a - b };
+        }
+
+        // e2. 一次退位减法：仅十位退位 (如 328 - 54 =, 516 - 273 =)
+        if (subtype === 'sub_single_borrow_tens') {
+          const u2 = rand(1, 6), u1 = rand(u2, 9); // 个位不借
+          const t1 = rand(1, 5), t2 = rand(t1 + 1, 9); // 十位借百位
+          const h1 = rand(3, 8), h2 = rand(0, h1 - 2);
+          const a = h1 * 100 + t1 * 10 + u1;
+          const b = h2 === 0 ? t2 * 10 + u2 : h2 * 100 + t2 * 10 + u2;
+          return { category: '三位数加减 · 十位退位减', type: 'standard', display: `${a} - ${b} =`, ans: a - b };
+        }
+
+        // f1. 两次连续退位减法：普通双退位 (如 324 - 58 =, 632 - 278 =)
+        if (subtype === 'sub_double_borrow_normal') {
+          const u1 = rand(1, 5), u2 = rand(u1 + 1, 9);
+          const t1 = rand(1, 5), t2 = rand(t1, 9);
+          const h1 = rand(3, 7), h2 = rand(0, h1 - 2);
+          const a = h1 * 100 + t1 * 10 + u1;
+          const b = h2 === 0 ? t2 * 10 + u2 : h2 * 100 + t2 * 10 + u2;
+          return { category: '三位数加减 · 连续双退位减', type: 'standard', display: `${a} - ${b} =`, ans: a - b };
+        }
+
+        // f2. 隔位退位 / 被减数中间有 0 (如 305 - 68 =, 503 - 247 =)
+        if (subtype === 'sub_double_borrow_middle_zero') {
+          const h1 = rand(3, 7);
+          const u1 = rand(1, 6);
+          const a = h1 * 100 + u1; // 中间为 0
+          const u2 = rand(u1 + 1, 9);
+          const t2 = rand(2, 8);
+          const h2 = rand(0, h1 - 2);
+          const b = h2 === 0 ? t2 * 10 + u2 : h2 * 100 + t2 * 10 + u2;
+          return { category: '三位数加减 · 隔位退位(含0)', type: 'standard', display: `${a} - ${b} =`, ans: a - b };
+        }
+
+        // f3. 整百数连续退位 (如 300 - 72 =, 700 - 256 =)
+        const h = rand(2, 8);
+        const a = h * 100;
+        const isSubThree = Math.random() < 0.5;
+        const b = isSubThree 
+          ? rand(1, h - 1) * 100 + rand(1, 8) * 10 + rand(1, 9)
+          : rand(2, 8) * 10 + rand(1, 9);
+        return { category: '三位数加减 · 整百连续退位', type: 'standard', display: `${a} - ${b} =`, ans: a - b };
+      },
+
+      // ----------------------------------------------------
+      // MODULE 2: 多位数乘一位数 & 除法/余数
+      // ----------------------------------------------------
+      // 1. 整十、整百数乘一位数 (30×5, 200×4, 6×50, 2100×4, 110×9)
+      genMultRound() {
+        const sub = pick(['tens', 'hundreds', 'order_swap', 'thousands']);
+        if (sub === 'tens') {
+          const a = rand(2, 9) * 10, b = rand(2, 9);
+          return { category: '多位数乘一位数 · 整十数乘法', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+        } else if (sub === 'hundreds') {
+          const a = rand(1, 8) * 100, b = rand(2, 6);
+          return { category: '多位数乘一位数 · 整百数乘法', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+        } else if (sub === 'order_swap') {
+          const a = rand(2, 9), b = rand(2, 8) * 10;
+          return { category: '多位数乘一位数 · 口算乘法', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+        } else {
+          const a = pick([1100, 1200, 2100, 2200, 3100, 110]);
+          const b = rand(2, 5);
+          return { category: '多位数乘一位数 · 乘法口算', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+        }
+      },
+
+      // 2. 两位数乘一位数（不进位 / 进位 / 几百几十乘一位数）
+      genMultTwoDigits() {
+        const sub = pick(['no_carry', 'carry', 'hundred_ten']);
+        if (sub === 'no_carry') {
+          // 不进位: 如 12×3, 21×4, 13×2, 32×2
+          const tens = rand(1, 3);
+          const b = rand(2, 3);
+          const units = rand(1, Math.floor(9 / b));
+          const a = tens * 10 + units;
+          return { category: '多位数乘一位数 · 两位数乘不进位', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+        } else if (sub === 'carry') {
+          // 进位: 如 18×5, 14×5, 24×3, 61×7
+          const a = pick([14, 15, 16, 17, 18, 24, 25, 36, 45, 61]);
+          const b = rand(3, 7);
+          return { category: '多位数乘一位数 · 两位数乘进位', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+        } else {
+          // 几百几十乘一位数: 120×3, 160×3, 8×110
+          const a = pick([120, 130, 140, 150, 160, 230, 240]);
+          const b = rand(2, 4);
+          if (Math.random() < 0.5) {
+            return { category: '多位数乘一位数 · 几百几十乘一位数', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+          } else {
+            return { category: '多位数乘一位数 · 几百几十乘一位数', type: 'standard', display: `${b} × ${a} =`, ans: a * b };
+          }
+        }
+      },
+
+      // 3. 中间、末尾有 0 的乘法
+      genMultZeros() {
+        const sub = pick(['zero_any', 'middle_zero', 'middle_zero']);
+        if (sub === 'zero_any') {
+          const a = rand(120, 990);
+          return { category: '多位数乘一位数 · 0的乘法', type: 'standard', display: `0 × ${a} =`, ans: 0 };
+        } else {
+          // 402 × 2 =, 203 × 3 =
+          const h = rand(2, 5);
+          const u = rand(1, 4);
+          const a = h * 100 + u;
+          const b = rand(2, 4);
+          return { category: '多位数乘一位数 · 中间有0的乘法', type: 'standard', display: `${a} × ${b} =`, ans: a * b };
+        }
+      },
+
+      // 4. 表内除法填空 (空格出现在任意位置: 被除数、除数或商)
+      // 如 72 ÷ ( ) = 9, ( ) ÷ 8 = 9, 56 ÷ 7 = ( )
+      genDivisionBlank() {
+        const divisor = rand(2, 9);
+        const quotient = rand(2, 9);
+        const dividend = divisor * quotient;
+        const blankPos = pick(['dividend', 'divisor', 'quotient']);
+
+        if (blankPos === 'dividend') {
+          return {
+            category: '表内除法 · 算式填空',
+            type: 'blank_dividend',
+            display: `( ) ÷ ${divisor} = ${quotient}`,
+            ans: dividend,
+            divisor,
+            quotient
+          };
+        } else if (blankPos === 'divisor') {
+          return {
+            category: '表内除法 · 算式填空',
+            type: 'blank_divisor',
+            display: `${dividend} ÷ ( ) = ${quotient}`,
+            ans: divisor,
+            dividend,
+            quotient
+          };
+        } else {
+          return {
+            category: '表内除法 · 口算除法',
+            type: 'standard',
+            display: `${dividend} ÷ ${divisor} =`,
+            ans: quotient
+          };
+        }
+      },
+
+      // 5. 除法有余数 (如 75 ÷ 8 = 9 ······ 3，商和余数填空)
+      genDivisionRemainder() {
+        const divisor = rand(3, 9);
+        const quotient = rand(2, 9);
+        const remainder = rand(1, divisor - 1);
+        const dividend = divisor * quotient + remainder;
+
+        return {
+          category: '有余数除法 · 商与余数',
+          type: 'remainder',
+          dividend,
+          divisor,
+          display: `${dividend} ÷ ${divisor} =`,
+          ansQ: quotient,
+          ansR: remainder,
+          ans: `${quotient}......${remainder}`
+        };
+      },
+
+      // ----------------------------------------------------
+      // MODULE 3: 简单两步混合运算 (口算两步)
+      // ----------------------------------------------------
+      genTwoSteps() {
+        const type = pick(['mul_add', 'div_add', 'same_level', 'parentheses']);
+        if (type === 'mul_add') {
+          // 乘加 / 乘减: 4 + 5 × 3, 5 × 9 - 25, 6 × 8 + 12
+          const isAdd = Math.random() < 0.5;
+          const a = rand(2, 9), b = rand(2, 9);
+          const mul = a * b;
+          if (isAdd) {
+            const c = rand(5, 30);
+            if (Math.random() < 0.5) {
+              return { category: '混合运算 · 乘加口算', type: 'standard', display: `${c} + ${a} × ${b} =`, ans: c + mul };
+            } else {
+              return { category: '混合运算 · 乘加口算', type: 'standard', display: `${a} × ${b} + ${c} =`, ans: mul + c };
+            }
+          } else {
+            const c = rand(5, Math.min(mul - 1, 30));
+            return { category: '混合运算 · 乘减口算', type: 'standard', display: `${a} × ${b} - ${c} =`, ans: mul - c };
+          }
+        } else if (type === 'div_add') {
+          // 除加 / 除减: 12 + 8 ÷ 4 =, 60 - 30 ÷ 6 =
+          const d = rand(2, 8), q = rand(2, 8);
+          const div = d * q;
+          const isAdd = Math.random() < 0.5;
+          if (isAdd) {
+            const c = rand(10, 50);
+            return { category: '混合运算 · 除加口算', type: 'standard', display: `${c} + ${div} ÷ ${d} =`, ans: c + q };
+          } else {
+            const c = rand(q + 10, 70);
+            return { category: '混合运算 · 除减口算', type: 'standard', display: `${c} - ${div} ÷ ${d} =`, ans: c - q };
+          }
+        } else if (type === 'same_level') {
+          // 同级从左到右: 6 × 6 ÷ 2 =, 68 - 12 + 8 =, 18 ÷ 6 × 4 =
+          const pattern = pick(['mul_div', 'div_mul', 'sub_add']);
+          if (pattern === 'mul_div') {
+            const a = rand(2, 8), b = rand(2, 6);
+            const prod = a * b;
+            const validDivs = [2, 3, 4, 6].filter(x => prod % x === 0);
+            const d = validDivs.length ? pick(validDivs) : 2;
+            return { category: '混合运算 · 同级从左至右', type: 'standard', display: `${a} × ${b} ÷ ${d} =`, ans: (a * b) / d };
+          } else if (pattern === 'div_mul') {
+            const d = rand(2, 6), q = rand(2, 6);
+            const a = d * q;
+            const m = rand(2, 6);
+            return { category: '混合运算 · 同级从左至右', type: 'standard', display: `${a} ÷ ${d} × ${m} =`, ans: q * m };
+          } else {
+            const a = rand(40, 80), b = rand(10, 30), c = rand(5, 20);
+            return { category: '混合运算 · 同级加减', type: 'standard', display: `${a} - ${b} + ${c} =`, ans: a - b + c };
+          }
+        } else {
+          // 带小括号: 63 ÷ (10 - 3) =, (72 - 18) ÷ 9 =
+          if (Math.random() < 0.5) {
+            const divisor = rand(2, 8);
+            const quotient = rand(2, 9);
+            const dividend = divisor * quotient;
+            const sub2 = rand(1, 8);
+            const sub1 = divisor + sub2;
+            return { category: '混合运算 · 带小括号', type: 'standard', display: `${dividend} ÷ (${sub1} - ${sub2}) =`, ans: quotient };
+          } else {
+            const divisor = rand(2, 8);
+            const quotient = rand(2, 8);
+            const target = divisor * quotient;
+            const b = rand(10, 40);
+            const a = target + b;
+            return { category: '混合运算 · 带小括号', type: 'standard', display: `(${a} - ${b}) ÷ ${divisor} =`, ans: quotient };
+          }
+        }
+      },
+
+      // ----------------------------------------------------
+      // MODULE 4: 比大小 (> < =)
+      // ----------------------------------------------------
+      genComparison() {
+        const type = pick(['confusing_numbers', 'calc_vs_num', 'calc_vs_calc']);
+        if (type === 'confusing_numbers') {
+          // 四位数以内容易看错的数字: 3045 与 3405, 6080 与 6800, 7201 与 7021
+          const digits = [rand(1, 9), rand(1, 9), 0, rand(1, 9)].sort(() => Math.random() - 0.5);
+          const num1 = digits[0] * 1000 + digits[1] * 100 + digits[2] * 10 + digits[3];
+          // Swap two digits to create confusing counterpart
+          const digits2 = [...digits];
+          const temp = digits2[1];
+          digits2[1] = digits2[2];
+          digits2[2] = temp;
+          const num2 = digits2[0] * 1000 + digits2[1] * 100 + digits2[2] * 10 + digits2[3];
+
+          let ans = '=';
+          if (num1 > num2) ans = '>';
+          else if (num1 < num2) ans = '<';
+
+          return {
+            category: '数感强化 · 易错数字比大小',
+            type: 'comparison',
+            leftExpr: `${num1}`,
+            rightExpr: `${num2}`,
+            display: `${num1} [ ○ ] ${num2}`,
+            ans: ans
+          };
+        } else if (type === 'calc_vs_num') {
+          // 简单计算结果与数字比大小: 63 ÷ 9 与 8, 4 × 7 与 28
+          const d = rand(2, 9), q = rand(2, 9);
+          const div = d * q;
+          const delta = pick([-1, 0, 1]);
+          const rightVal = q + delta;
+          const leftVal = q;
+          let ans = '=';
+          if (leftVal > rightVal) ans = '>';
+          else if (leftVal < rightVal) ans = '<';
+
+          return {
+            category: '比大小 · 算式与数值比对',
+            type: 'comparison',
+            leftExpr: `${div} ÷ ${d}`,
+            rightExpr: `${rightVal}`,
+            display: `${div} ÷ ${d} [ ○ ] ${rightVal}`,
+            ans: ans
+          };
+        } else {
+          // 简单计算结果比大小: 4 × 6 与 3 × 8
+          if (Math.random() < 0.5) {
+            // Equal expressions: e.g. 4 × 6 与 3 × 8
+            const pairs = [
+              ['3 × 8', '4 × 6'],
+              ['2 × 9', '3 × 6'],
+              ['4 × 9', '6 × 6'],
+              ['2 × 8', '4 × 4'],
+              ['45 ÷ 5', '72 ÷ 8']
+            ];
+            const p = pick(pairs);
+            return {
+              category: '比大小 · 简易算式比大小',
+              type: 'comparison',
+              leftExpr: p[0],
+              rightExpr: p[1],
+              display: `${p[0]} [ ○ ] ${p[1]}`,
+              ans: '='
+            };
+          } else {
+            const a = rand(2, 9), b = rand(2, 9);
+            const c = rand(2, 9), d = rand(2, 9);
+            const v1 = a * b, v2 = c * d;
+            let ans = '=';
+            if (v1 > v2) ans = '>';
+            else if (v1 < v2) ans = '<';
+            return {
+              category: '比大小 · 乘法算式比大小',
+              type: 'comparison',
+              leftExpr: `${a} × ${b}`,
+              rightExpr: `${c} × ${d}`,
+              display: `${a} × ${b} [ ○ ] ${c} × ${d}`,
+              ans: ans
+            };
+          }
+        }
+      }
+    };
+
+    // ========================================================
+    // 2. QUESTION SET BUILDER (Proportional Distribution)
+    // 60 standard ratio: 30 / 15 / 10 / 5
+    // ========================================================
+    function generateQuestionSet(total) {
+      // Calculate quota according to user uploaded syllabus:
+      // Module 1 (万以内加减法): 50%
+      // Module 2 (多位数乘一位数 & 表内/余数除法): 25%
+      // Module 3 (两步混合口算): 16.7%
+      // Module 4 (比大小): 8.3%
+      const q1 = Math.round(total * 0.50);
+      const q2 = Math.round(total * 0.25);
+      const q4 = Math.max(1, Math.round(total * (5 / 60)));
+      const q3 = Math.max(1, total - (q1 + q2 + q4));
+
+      const list = [];
+
+      // Gen Module 1 (加减法)
+      for (let i = 0; i < q1; i++) {
+        const roll = Math.random();
+        if (roll < 0.20) list.push(Generator.genTwoDigits());
+        else if (roll < 0.40) list.push(Generator.genRoundNumbers());
+        else list.push(Generator.genThreeDigits());
+      }
+
+      // Gen Module 2 (多位数乘一位数 & 除法)
+      for (let i = 0; i < q2; i++) {
+        const roll = Math.random();
+        if (roll < 0.25) list.push(Generator.genMultRound());
+        else if (roll < 0.50) list.push(Generator.genMultTwoDigits());
+        else if (roll < 0.65) list.push(Generator.genMultZeros());
+        else if (roll < 0.85) list.push(Generator.genDivisionBlank());
+        else list.push(Generator.genDivisionRemainder());
+      }
+
+      // Gen Module 3 (两步混合运算)
+      for (let i = 0; i < q3; i++) {
+        list.push(Generator.genTwoSteps());
+      }
+
+      // Gen Module 4 (比大小)
+      for (let i = 0; i < q4; i++) {
+        list.push(Generator.genComparison());
+      }
+
+      // Shuffle list to mix difficulty and types
+      return list.sort(() => Math.random() - 0.5).map((q, idx) => ({
+        ...q,
+        id: idx + 1,
+        userAnswer: null, // string or {q, r}
+        userAnswerQ: null,
+        userAnswerR: null,
+        isAnswered: false,
+        isCorrect: false
+      }));
+    }
+
+    // ========================================================
+    // 3. UI STATE TRANSITIONS & CONTROLLER
+    // ========================================================
+
+    function selectCount(val) {
+      selectedTotalCount = val;
+      document.getElementById('selectedCountDisplay').textContent = `${val} 题`;
+      document.querySelectorAll('.count-btn').forEach(btn => {
+        const v = parseInt(btn.getAttribute('data-value'));
+        if (v === val) {
+          btn.className = "count-btn py-2 text-xs font-bold rounded-xl border transition bg-blue-600 text-white border-blue-600 shadow-sm";
+        } else {
+          btn.className = "count-btn py-2 text-xs font-bold rounded-xl border transition bg-white text-slate-700 border-slate-200 hover:border-blue-400";
+        }
+      });
+    }
+
+    function startQuiz() {
+      questions = generateQuestionSet(selectedTotalCount);
+      currentIndex = 0;
+      elapsedSeconds = 0;
+
+      // Switch views
+      document.getElementById('homeView').classList.add('hidden');
+      document.getElementById('resultView').classList.add('hidden');
+      document.getElementById('quizView').classList.remove('hidden');
+      document.getElementById('quizView').classList.add('flex');
+      document.getElementById('navRightBadge').classList.remove('hidden');
+
+      // Start timer
+      if (timerInterval) clearInterval(timerInterval);
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+
+      // Render first question
+      renderCurrentQuestion();
+    }
+
+    function updateTimerDisplay() {
+      const mins = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+      const secs = (elapsedSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
+    }
+
+    function renderCurrentQuestion() {
+      const q = questions[currentIndex];
+      const total = questions.length;
+
+      // Update Header indices
+      document.getElementById('currentIdxDisplay').textContent = currentIndex + 1;
+      document.getElementById('totalIdxDisplay').textContent = total;
+      const progressPercent = Math.round(((currentIndex + 1) / total) * 100);
+      document.getElementById('progressBar').style.width = `${progressPercent}%`;
+
+      // Tag
+      document.getElementById('questionTag').textContent = q.category;
+
+      // Buttons state
+      const prevBtn = document.getElementById('prevBtn');
+      prevBtn.disabled = currentIndex === 0;
+
+      const nextBtn = document.getElementById('nextBtn');
+      if (currentIndex === total - 1) {
+        nextBtn.innerHTML = `<span>提交卷子</span> <i class="fa-solid fa-paper-plane"></i>`;
+        nextBtn.className = "px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm flex items-center gap-2 shadow-md shadow-emerald-500/20 transition cursor-pointer";
+      } else {
+        nextBtn.innerHTML = `<span>下一题</span> <i class="fa-solid fa-chevron-right"></i>`;
+        nextBtn.className = "px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm flex items-center gap-2 shadow-md shadow-blue-500/20 transition cursor-pointer";
+      }
+
+      // Render math stem & input based on type
+      const stemContainer = document.getElementById('questionStem');
+      const inputSection = document.getElementById('inputSection');
+      stemContainer.innerHTML = '';
+      inputSection.innerHTML = '';
+
+      if (q.type === 'comparison') {
+        // Comparison: left vs right with circle in between on the same line
+        const currentSymbol = q.userAnswer || '';
+        stemContainer.innerHTML = `
+          <div class="flex items-center gap-3 sm:gap-5 flex-wrap justify-center">
+            <span class="px-4 py-2 bg-slate-50 rounded-2xl border border-slate-200 text-slate-800 text-2xl sm:text-3xl">${q.leftExpr}</span>
+            <span class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-indigo-50 border-2 border-indigo-200 text-indigo-700 flex items-center justify-center font-bold text-3xl shadow-inner">
+              ${currentSymbol || '<span class="text-slate-300 font-normal">?</span>'}
+            </span>
+            <span class="px-4 py-2 bg-slate-50 rounded-2xl border border-slate-200 text-slate-800 text-2xl sm:text-3xl">${q.rightExpr}</span>
+          </div>
+        `;
+
+        // 3 Big Comparison Buttons below
+        inputSection.innerHTML = `
+          <div class="flex items-center gap-4 sm:gap-6 mt-2">
+            <button onclick="setComparisonAnswer('>')" class="cmp-btn w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 font-black text-2xl sm:text-3xl transition flex items-center justify-center ${currentSymbol === '>' ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400'}">
+              &gt;
+            </button>
+            <button onclick="setComparisonAnswer('<')" class="cmp-btn w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 font-black text-2xl sm:text-3xl transition flex items-center justify-center ${currentSymbol === '<' ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400'}">
+              &lt;
+            </button>
+            <button onclick="setComparisonAnswer('=')" class="cmp-btn w-16 h-16 sm:w-20 sm:h-20 rounded-2xl border-2 font-black text-2xl sm:text-3xl transition flex items-center justify-center ${currentSymbol === '=' ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-white border-slate-200 text-slate-700 hover:border-blue-400'}">
+              =
+            </button>
+          </div>
+        `;
+      } else if (q.type === 'remainder') {
+        // Remainder division: 75 ÷ 8 = [ ] ······ [ ] (All in one line)
+        const valQ = q.userAnswerQ !== null ? q.userAnswerQ : '';
+        const valR = q.userAnswerR !== null ? q.userAnswerR : '';
+
+        stemContainer.innerHTML = `
+          <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-center text-2xl sm:text-3xl md:text-4xl">
+            <span>${q.dividend} ÷ ${q.divisor} =</span>
+            <input id="ansInputQ" type="number" value="${valQ}" oninput="recordRemainderAnswer()" class="w-20 sm:w-24 text-center py-1 sm:py-1.5 text-2xl sm:text-3xl md:text-4xl font-black text-blue-600 bg-slate-50 border-2 border-blue-300 rounded-2xl focus:border-blue-500 focus:bg-white focus:outline-none transition shadow-inner">
+            <span class="text-slate-400 tracking-wider text-xl sm:text-2xl">······</span>
+            <input id="ansInputR" type="number" value="${valR}" oninput="recordRemainderAnswer()" class="w-20 sm:w-24 text-center py-1 sm:py-1.5 text-2xl sm:text-3xl md:text-4xl font-black text-indigo-600 bg-slate-50 border-2 border-indigo-300 rounded-2xl focus:border-indigo-500 focus:bg-white focus:outline-none transition shadow-inner">
+          </div>
+        `;
+        setTimeout(() => {
+          const el = document.getElementById('ansInputQ');
+          if (el) el.focus();
+        }, 50);
+      } else if (q.type === 'blank_dividend') {
+        // ( [ ] ) ÷ divisor = quotient (All in one line)
+        stemContainer.innerHTML = `
+          <div class="flex items-center gap-3 justify-center flex-wrap">
+            <input id="ansInput" type="number" value="${q.userAnswer !== null ? q.userAnswer : ''}" oninput="recordAnswer(this.value)" class="w-24 sm:w-32 text-center py-1 sm:py-1.5 text-3xl sm:text-4xl font-black text-blue-600 bg-slate-50 border-2 border-dashed border-blue-400 rounded-2xl focus:border-blue-500 focus:bg-white focus:outline-none transition shadow-inner" />
+            <span>÷ ${q.divisor} = ${q.quotient}</span>
+          </div>
+        `;
+        setTimeout(() => {
+          const el = document.getElementById('ansInput');
+          if (el) el.focus();
+        }, 50);
+      } else if (q.type === 'blank_divisor') {
+        // dividend ÷ ( [ ] ) = quotient (All in one line)
+        stemContainer.innerHTML = `
+          <div class="flex items-center gap-3 justify-center flex-wrap">
+            <span>${q.dividend} ÷</span>
+            <input id="ansInput" type="number" value="${q.userAnswer !== null ? q.userAnswer : ''}" oninput="recordAnswer(this.value)" class="w-24 sm:w-32 text-center py-1 sm:py-1.5 text-3xl sm:text-4xl font-black text-blue-600 bg-slate-50 border-2 border-dashed border-blue-400 rounded-2xl focus:border-blue-500 focus:bg-white focus:outline-none transition shadow-inner" />
+            <span>= ${q.quotient}</span>
+          </div>
+        `;
+        setTimeout(() => {
+          const el = document.getElementById('ansInput');
+          if (el) el.focus();
+        }, 50);
+      } else {
+        // Standard arithmetic input: In the same single line with stem, removed placeholder words
+        stemContainer.innerHTML = `
+          <div class="flex items-center gap-3 sm:gap-4 justify-center flex-wrap">
+            <span class="tracking-wide">${q.display}</span>
+            <input id="ansInput" type="number" value="${q.userAnswer !== null ? q.userAnswer : ''}" oninput="recordAnswer(this.value)" class="w-28 sm:w-36 md:w-44 text-center py-1.5 sm:py-2 text-3xl sm:text-4xl md:text-5xl font-black text-blue-600 bg-slate-50 border-2 border-blue-300 rounded-2xl focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100 focus:outline-none transition shadow-inner">
+          </div>
+        `;
+        setTimeout(() => {
+          const el = document.getElementById('ansInput');
+          if (el) el.focus();
+        }, 50);
+      }
+    }
+
+    // Capture User Input
+    function recordAnswer(val) {
+      const q = questions[currentIndex];
+      if (val === '') {
+        q.userAnswer = null;
+        q.isAnswered = false;
+      } else {
+        q.userAnswer = val.trim();
+        q.isAnswered = true;
+      }
+    }
+
+    function recordRemainderAnswer() {
+      const q = questions[currentIndex];
+      const qVal = document.getElementById('ansInputQ').value;
+      const rVal = document.getElementById('ansInputR').value;
+      q.userAnswerQ = qVal !== '' ? parseInt(qVal) : null;
+      q.userAnswerR = rVal !== '' ? parseInt(rVal) : null;
+
+      if (qVal !== '' && rVal !== '') {
+        q.userAnswer = `${qVal}......${rVal}`;
+        q.isAnswered = true;
+      } else {
+        q.userAnswer = null;
+        q.isAnswered = false;
+      }
+    }
+
+    function setComparisonAnswer(symbol) {
+      const q = questions[currentIndex];
+      q.userAnswer = symbol;
+      q.isAnswered = true;
+      renderCurrentQuestion();
+    }
+
+    function prevQuestion() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        renderCurrentQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        renderCurrentQuestion();
+      } else {
+        // Last question: submit exam
+        submitQuiz();
+      }
+    }
+
+    // Keyboard support: Enter key automatically advances
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById('quizView').classList.contains('hidden')) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        nextQuestion();
+      }
+    });
+
+    // Quick Question Navigator Drawer
+    function toggleCardGrid() {
+      const drawer = document.getElementById('jumpDrawer');
+      if (drawer.classList.contains('hidden')) {
+        drawer.classList.remove('hidden');
+        renderJumpGrid();
+      } else {
+        drawer.classList.add('hidden');
+      }
+    }
+
+    function renderJumpGrid() {
+      const grid = document.getElementById('jumpGrid');
+      grid.innerHTML = '';
+      questions.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        const isCurrent = idx === currentIndex;
+        const isDone = q.isAnswered;
+
+        let cls = "h-10 rounded-xl font-bold text-xs flex items-center justify-center transition border ";
+        if (isCurrent) {
+          cls += "ring-2 ring-blue-500 border-blue-500 bg-blue-50 text-blue-700";
+        } else if (isDone) {
+          cls += "bg-blue-600 border-blue-600 text-white";
+        } else {
+          cls += "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100";
+        }
+
+        btn.className = cls;
+        btn.textContent = idx + 1;
+        btn.onclick = () => {
+          currentIndex = idx;
+          renderCurrentQuestion();
+          toggleCardGrid();
+        };
+        grid.appendChild(btn);
+      });
+    }
+
+    // ========================================================
+    // 4. SUBMISSION, SCORE AUDITING & REVIEW ENGINE
+    // ========================================================
+
+    function submitQuiz() {
+      if (timerInterval) clearInterval(timerInterval);
+
+      // Audit all answers
+      let correctCount = 0;
+      questions.forEach(q => {
+        let isRight = false;
+        if (q.type === 'remainder') {
+          isRight = (parseInt(q.userAnswerQ) === q.ansQ) && (parseInt(q.userAnswerR) === q.ansR);
+        } else if (q.type === 'comparison') {
+          isRight = (q.userAnswer === q.ans);
+        } else {
+          isRight = (q.userAnswer !== null && parseInt(q.userAnswer) === parseInt(q.ans));
+        }
+        q.isCorrect = isRight;
+        if (isRight) correctCount++;
+      });
+
+      const total = questions.length;
+      const accuracy = ((correctCount / total) * 100).toFixed(1);
+      const avgTime = (elapsedSeconds / total).toFixed(1);
+
+      // Populate Result Statistics
+      document.getElementById('correctScore').textContent = correctCount;
+      document.getElementById('totalQuestions').textContent = total;
+      document.getElementById('accuracyRate').textContent = `${accuracy}%`;
+
+      const mins = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+      const secs = (elapsedSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('totalTimeUsed').textContent = `${mins}:${secs}`;
+      document.getElementById('avgTimePerQ').textContent = `${avgTime}s`;
+
+      // Badge based on score
+      const badge = document.getElementById('badgeBanner');
+      if (accuracy >= 95) {
+        badge.innerHTML = `<i class="fa-solid fa-crown text-amber-500"></i> 速算至尊王者 · 卓越登顶`;
+        badge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold bg-amber-50 text-amber-700 border border-amber-200 mb-4";
+      } else if (accuracy >= 80) {
+        badge.innerHTML = `<i class="fa-solid fa-medal text-blue-500"></i> 速算优秀之星 · 表现亮眼`;
+        badge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold bg-blue-50 text-blue-700 border border-blue-200 mb-4";
+      } else {
+        badge.innerHTML = `<i class="fa-solid fa-fire text-rose-500"></i> 继续冲刺 · 查漏补缺`;
+        badge.className = "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold bg-rose-50 text-rose-700 border border-rose-200 mb-4";
+      }
+
+      // Persist results to localStorage
+      saveQuizRecord({
+        timeStr: new Date().toLocaleString('zh-CN', { hour12: false }),
+        scoreRatio: `${correctCount} / ${total}`,
+        accuracy: `${accuracy}%`,
+        totalTime: `${mins}:${secs}`,
+        avgTime: `${avgTime}s`
+      });
+
+      // Filter badges
+      const wrongCount = total - correctCount;
+      document.getElementById('allCountBadge').textContent = total;
+      document.getElementById('wrongCountBadge').textContent = wrongCount;
+
+      // Switch View
+      document.getElementById('quizView').classList.add('hidden');
+      document.getElementById('resultView').classList.remove('hidden');
+      document.getElementById('resultView').classList.add('flex');
+      document.getElementById('navRightBadge').classList.add('hidden');
+
+      // Default review: show wrong if any exist, else all
+      renderReview(wrongCount > 0 ? 'wrong' : 'all');
+    }
+
+    // ========================================================
+    // 5. LOCALSTORAGE PERSISTENCE & HISTORY MODAL
+    // ========================================================
+    const STORAGE_KEY = 'MATH_SPEED_TEST_RECORDS';
+
+    function getHistoryRecords() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveQuizRecord(record) {
+      const records = getHistoryRecords();
+      records.unshift(record); // newest first
+      if (records.length > 50) records.pop(); // keep last 50
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      } catch (e) {
+        console.error('Failed to save record to localStorage', e);
+      }
+    }
+
+    function toggleHistoryModal() {
+      const modal = document.getElementById('historyModal');
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        renderHistoryList();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('historyListContainer');
+      const records = getHistoryRecords();
+
+      if (records.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-slate-400">
+            <i class="fa-regular fa-folder-open text-4xl mb-2 text-slate-300 block"></i>
+            <p class="font-bold text-slate-500">暂无历史测验记录</p>
+            <p class="text-xs text-slate-400 mt-1">完成一套速算测试后将自动记录于此</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = records.map((r, i) => `
+        <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 hover:border-indigo-200 transition">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 flex items-center gap-1.5">
+              <i class="fa-regular fa-clock"></i> ${r.timeStr}
+            </span>
+            <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
+              parseFloat(r.accuracy) >= 90 ? 'bg-emerald-100 text-emerald-700' :
+              parseFloat(r.accuracy) >= 70 ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'
+            }">
+              正确率 ${r.accuracy}
+            </span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center pt-2 border-t border-slate-200/60">
+            <div class="bg-white rounded-xl p-2 border border-slate-100">
+              <div class="text-[11px] text-slate-400 font-medium">答对/总题数</div>
+              <div class="font-black text-slate-700 font-math text-base">${r.scoreRatio}</div>
+            </div>
+            <div class="bg-white rounded-xl p-2 border border-slate-100">
+              <div class="text-[11px] text-slate-400 font-medium">总用时</div>
+              <div class="font-black text-slate-700 font-mono text-base">${r.totalTime}</div>
+            </div>
+            <div class="bg-white rounded-xl p-2 border border-slate-100">
+              <div class="text-[11px] text-slate-400 font-medium">平均每题</div>
+              <div class="font-black text-slate-700 font-mono text-base">${r.avgTime}</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function clearQuizHistory() {
+      if (localStorage.getItem(STORAGE_KEY)) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderHistoryList();
+      }
+    }
+
+    function renderReview(filter) {
+      currentFilter = filter;
+      const listEl = document.getElementById('reviewList');
+      listEl.innerHTML = '';
+
+      // Update Filter button aesthetics
+      const allBtn = document.getElementById('filterAllBtn');
+      const wrongBtn = document.getElementById('filterWrongBtn');
+      if (filter === 'all') {
+        allBtn.className = "px-3.5 py-1.5 rounded-lg bg-white shadow-xs text-blue-600 font-bold";
+        wrongBtn.className = "px-3.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 font-bold";
+      } else {
+        allBtn.className = "px-3.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 font-bold";
+        wrongBtn.className = "px-3.5 py-1.5 rounded-lg bg-white shadow-xs text-rose-600 font-bold";
+      }
+
+      const filteredList = questions.filter(q => {
+        if (filter === 'wrong') return !q.isCorrect;
+        return true;
+      });
+
+      if (filteredList.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center py-12 text-slate-400">
+            <i class="fa-regular fa-face-smile-beam text-4xl text-emerald-500 mb-2 block"></i>
+            <p class="font-bold text-slate-600">太棒了！本试卷没有错题！</p>
+          </div>
+        `;
+        return;
+      }
+
+      filteredList.forEach(q => {
+        const item = document.createElement('div');
+        item.className = `p-4 sm:p-5 rounded-2xl border transition ${
+          q.isCorrect 
+            ? 'bg-slate-50/50 border-slate-200/80' 
+            : 'bg-rose-50/40 border-rose-200'
+        }`;
+
+        // Format user answer text & correct answer text
+        let userAnsText = q.userAnswer !== null ? q.userAnswer : '<span class="text-slate-400 italic">未作答</span>';
+        let correctAnsText = q.ans;
+
+        if (q.type === 'remainder') {
+          if (q.userAnswerQ !== null || q.userAnswerR !== null) {
+            userAnsText = `商: ${q.userAnswerQ !== null ? q.userAnswerQ : '未填'}, 余: ${q.userAnswerR !== null ? q.userAnswerR : '未填'}`;
+          } else {
+            userAnsText = '<span class="text-slate-400 italic">未作答</span>';
+          }
+          correctAnsText = `商: ${q.ansQ}, 余: ${q.ansR}`;
+        }
+
+        // Stem representation
+        let stemDisplay = q.display;
+        if (q.type === 'blank_dividend') stemDisplay = `( ) ÷ ${q.divisor} = ${q.quotient}`;
+        if (q.type === 'blank_divisor') stemDisplay = `${q.dividend} ÷ ( ) = ${q.quotient}`;
+
+        item.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg ${q.isCorrect ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'} font-bold text-xs flex items-center justify-center">
+                  ${q.id}
+                </span>
+                <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-white border border-slate-200 text-slate-500">
+                  ${q.category}
+                </span>
+              </div>
+              <div class="text-xl sm:text-2xl font-black text-slate-800 math-font mt-1">
+                ${stemDisplay}
+              </div>
+            </div>
+
+            <!-- Answer comparison pill -->
+            <div class="flex items-center gap-4 text-sm font-semibold bg-white px-4 py-2.5 rounded-xl border ${q.isCorrect ? 'border-slate-200' : 'border-rose-200'}">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-400">你的回答:</span>
+                <span class="font-bold ${q.isCorrect ? 'text-emerald-600' : 'text-rose-600 font-math'}">
+                  ${userAnsText}
+                </span>
+                ${q.isCorrect 
+                  ? '<i class="fa-solid fa-circle-check text-emerald-500 ml-1"></i>' 
+                  : '<i class="fa-solid fa-circle-xmark text-rose-500 ml-1"></i>'
+                }
+              </div>
+
+              ${!q.isCorrect ? `
+                <div class="border-l border-slate-200 pl-4 flex items-center gap-1.5">
+                  <span class="text-xs text-slate-400">正确答案:</span>
+                  <span class="font-bold text-emerald-600 font-math">${correctAnsText}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    // Retrying with the same question set
+    function restartSameSet() {
+      questions.forEach(q => {
+        q.userAnswer = null;
+        q.userAnswerQ = null;
+        q.userAnswerR = null;
+        q.isAnswered = false;
+        q.isCorrect = false;
+      });
+      currentIndex = 0;
+      elapsedSeconds = 0;
+
+      document.getElementById('resultView').classList.add('hidden');
+      document.getElementById('quizView').classList.remove('hidden');
+      document.getElementById('quizView').classList.add('flex');
+      document.getElementById('navRightBadge').classList.remove('hidden');
+
+      if (timerInterval) clearInterval(timerInterval);
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        elapsedSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+
+      renderCurrentQuestion();
+    }
+
+    // Go Home view
+    function goHome() {
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById('quizView').classList.add('hidden');
+      document.getElementById('resultView').classList.add('hidden');
+      document.getElementById('homeView').classList.remove('hidden');
+      document.getElementById('navRightBadge').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
